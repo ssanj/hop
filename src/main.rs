@@ -35,13 +35,19 @@ impl Error for HopError {
 }
 
 fn main() -> Result<(), Box<dyn Error>>{
+    println!("~Hop~");
     let home = get_home()?;
     let home_entries = get_hop_home(home)?;
     for dir in home_entries {
-        println!("{:?}", dir.file_name().ok_or_else(|| HopError::CouldNotReadFromHopDir)?);
+        let file_name = do_blah(dir).unwrap_or_else(|| "--unknown--".to_string());
+        println!("{}", file_name);
     }
 
     Ok(())
+}
+
+fn do_blah(dir: PathBuf) -> Option<String> {
+    Some(dir.file_name()?.to_str()?.to_string())
 }
 
 fn get_home() -> Result<PathBuf, io::Error> {
