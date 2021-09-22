@@ -1,24 +1,19 @@
 use std::fmt;
 use std::error::Error;
-// use std::io::{Error, ErrorKind};
+use std::io;
 use std::path::PathBuf;
+use std::fs;
 use dirs::home_dir;
 
 enum HopError {
-    HomeDirNotFound,
-    CouldNotCreateHopDir,
     CouldNotReadFromHopDir,
-    CouldNotWriteToHopDir
 }
 
 impl fmt::Debug for HopError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
        let debug_info = match self {
-            HopError::HomeDirNotFound => "Hop Error D: Could not find your home directory",
-            HopError::CouldNotCreateHopDir => "Hop Error D: Could not create the .hop directory",
             HopError::CouldNotReadFromHopDir => "Hop Error D: Could not read from the .hop directory",
-            HopError::CouldNotWriteToHopDir => "Hop Error D: Could not write to the .hop directory"
         };
 
         write!(f,"{}", debug_info)
@@ -34,20 +29,38 @@ impl fmt::Display for HopError {
 impl Error for HopError {
     fn description(&self) -> &str {
         match self {
-            HopError::HomeDirNotFound => "Hop Error: Could not find your home directory",
-            HopError::CouldNotCreateHopDir => "Hop Error: Could not create the .hop directory",
             HopError::CouldNotReadFromHopDir => "Hop Error: Could not read from the .hop directory",
-            HopError::CouldNotWriteToHopDir => "Hop Error: Could not write to the .hop directory"
         }
     }
 }
 
-fn main() -> Result<(), HopError>{
+fn main() -> Result<(), Box<dyn Error>>{
     let home = get_home()?;
-    println!("home directory: {:?}", home);
+    let home_entries = get_hop_home(home)?;
+    for dir in home_entries {
+        println!("{:?}", dir.file_name().ok_or_else(|| HopError::CouldNotReadFromHopDir)?);
+    }
+
     Ok(())
 }
 
-fn get_home() -> Result<PathBuf, HopError> {
-    None.ok_or_else(|| HopError::HomeDirNotFound)
+fn get_home() -> Result<PathBuf, io::Error> {
+    home_dir().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not get home directory"))
+}
+
+fn get_hop_home(home: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
+    let mut hop_home  = home.clone();
+    hop_home.push(".hop");
+
+    if hop_home.is_dir() {
+        let entries = fs::read_dir(hop_home)?
+            .map(|res| res.map(|e| e.path()))
+            .collect::<Result<Vec<_>, io::Error>>()?;
+
+        Ok(entries)
+    } else {
+        Err(io::Error::new(io::ErrorKind::Other, "Could not get ~/.hop directory"))
+    }
+
+
 }
