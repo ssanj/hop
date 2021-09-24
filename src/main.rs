@@ -4,12 +4,76 @@ use std::io;
 use std::path::PathBuf;
 use std::fs::{self, DirEntry};
 use dirs::home_dir;
+use clap::{App, Arg};
 
 
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{
+    let matches = App::new("Hop")
+        .version("0.1.0")
+        .author("Sanj Sahayam")
+        .about("Hop to frequently used directories")
+        .arg(
+            Arg::with_name("list")
+                .short("l")
+                .long("list")
+                .help("Lists hoppable directories")
+        )
+        .arg(
+            Arg::with_name("jump")
+                .short("j")
+                .long("jump")
+                .value_name("NAME")
+                .help("Jump to a named directory")
+                .takes_value(true)
+        )
+        .get_matches();
+
     let hop_home = get_home()?.join(".hop");
 
+    let program =
+        if matches.is_present("list") {
+            let _result = list_links(&hop_home);
+            ()
+        } else if let Some(j) = matches.value_of("jump") {
+            let _result = jump_to(&hop_home, Link(j.to_string()));
+            ()
+        } else {
+            println!("Not sure what you want! See usage");
+        };
+
+    Ok(program)
+}
+
+fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
+    let result = match get_links(hop_home) {
+        Ok(link_pairs) => {
+            let mut found = false;
+            for lp in link_pairs {
+                if link == lp.link {
+                    println!("{}", lp.target);
+                    found = true;
+                }
+            }
+
+            if found {
+                ()
+            } else {
+                println!("Could not find link: {}", link)
+            }
+
+
+
+        },
+
+        Err(e) => println!("Could not retrieve links: {}", e)
+    };
+
+    Ok(result)
+
+}
+
+fn list_links(hop_home: &PathBuf) -> Result<(), io::Error> {
     let result = match get_links(hop_home) {
         Ok(link_pairs) => {
             for lp in link_pairs {
@@ -32,7 +96,7 @@ fn get_home() -> Result<PathBuf, io::Error> {
     home_dir().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not get home directory"))
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Link(String);
 
 #[derive(Debug)]
@@ -63,7 +127,7 @@ impl fmt::Display for LinkPair {
 }
 
 
-fn get_links(path: PathBuf) -> Result<Vec<LinkPair>, io::Error> {
+fn get_links(path: &PathBuf) -> Result<Vec<LinkPair>, io::Error> {
     let x = fs::read_dir(path)?;
     x.map(|res| res.and_then(|entry| create_link_pair(entry)))
     .collect::<Result<Vec<_>, io::Error>>() //traverse
