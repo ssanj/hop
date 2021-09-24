@@ -7,6 +7,19 @@ use dirs::home_dir;
 use clap::{App, Arg};
 
 
+#[derive(Debug, PartialEq)]
+struct Link(String);
+
+#[derive(Debug)]
+struct LinkTarget(String);
+
+#[derive(Debug)]
+struct LinkPair {
+    link: Link,
+    target: LinkTarget
+}
+
+
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{
     let matches = App::new("Hop")
@@ -48,25 +61,13 @@ fn main() -> Result<(), Box<dyn Error>>{
 fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
     let result = match get_links(hop_home) {
         Ok(link_pairs) => {
-            let mut found = false;
-            for lp in link_pairs {
-                if link == lp.link {
-                    println!("{}", lp.target);
-                    found = true;
-                }
+            match link_pairs.iter().find(|&lp| lp.link == link) {
+                Some(found_lp) => println!("{}", found_lp.target),
+                None => println!("Could not find link: {}", link)
             }
-
-            if found {
-                ()
-            } else {
-                println!("Could not find link: {}", link)
-            }
-
-
-
         },
 
-        Err(e) => println!("Could not retrieve links: {}", e)
+        Err(e) => eprintln!("Could not retrieve links: {}", e)
     };
 
     Ok(result)
@@ -94,18 +95,6 @@ fn get_file_name(dir: PathBuf) -> Option<String> {
 
 fn get_home() -> Result<PathBuf, io::Error> {
     home_dir().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not get home directory"))
-}
-
-#[derive(Debug, PartialEq)]
-struct Link(String);
-
-#[derive(Debug)]
-struct LinkTarget(String);
-
-#[derive(Debug)]
-struct LinkPair {
-    link: Link,
-    target: LinkTarget
 }
 
 impl fmt::Display for Link {
