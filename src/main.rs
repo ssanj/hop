@@ -22,7 +22,7 @@ struct LinkPair {
 
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{
-    let matches = App::new("Hop")
+    let app = App::new("Hop")
         .version("0.1.0")
         .author("Sanj Sahayam")
         .about("Hop to frequently used directories")
@@ -39,8 +39,10 @@ fn main() -> Result<(), Box<dyn Error>>{
                 .value_name("NAME")
                 .help("Jump to a named directory")
                 .takes_value(true)
-        )
-        .get_matches();
+        );
+
+     let mut app2 = app.clone();
+     let matches = app.get_matches();
 
     let hop_home = get_home()?.join(".hop");
 
@@ -52,7 +54,8 @@ fn main() -> Result<(), Box<dyn Error>>{
             let _result = jump_to(&hop_home, Link(j.to_string()));
             ()
         } else {
-            println!("Not sure what you want! See usage");
+            let _result = app2.print_help();
+            ()
         };
 
     Ok(program)
@@ -71,7 +74,6 @@ fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
     };
 
     Ok(result)
-
 }
 
 fn list_links(hop_home: &PathBuf) -> Result<(), io::Error> {
@@ -129,25 +131,4 @@ fn create_link_pair(dir_entry: DirEntry) -> io::Result<LinkPair> {
     let target_res = fs::read_link(link_path);
 
     target_res.map(|target| LinkPair{ link: Link(link), target: LinkTarget( target.to_string_lossy().to_string()) })
-}
-
-#[allow(dead_code)]
-fn new_io_error(message: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, message)
-}
-
-#[allow(dead_code)]
-fn get_hop_home2(hop_home: &mut PathBuf) -> Result<Vec<PathBuf>, io::Error> {
-    hop_home.push(".hop");
-
-    if hop_home.is_dir() {
-        let entries = fs::read_dir(hop_home)?
-            .map(|res| res.map(|e| e.path()))
-            .collect::<Result<Vec<_>, io::Error>>()?;
-
-        Ok(entries)
-    } else {
-        Err(io::Error::new(io::ErrorKind::Other, "Could not get ~/.hop directory"))
-    }
-
 }
