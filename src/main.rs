@@ -1,23 +1,12 @@
-use std::fmt;
 use std::error::Error;
 use std::io;
 use std::path::PathBuf;
 use std::fs::{self, DirEntry};
 use dirs::home_dir;
 use clap::{App, Arg};
+use models::{Link, LinkPair, LinkTarget};
 
-
-#[derive(Debug, PartialEq)]
-struct Link(String);
-
-#[derive(Debug)]
-struct LinkTarget(String);
-
-#[derive(Debug)]
-struct LinkPair {
-    link: Link,
-    target: LinkTarget
-}
+mod models;
 
 
 //todo: How do we test any?
@@ -97,24 +86,6 @@ fn get_file_name(dir: PathBuf) -> Option<String> {
 
 fn get_home() -> Result<PathBuf, io::Error> {
     home_dir().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not get home directory"))
-}
-
-impl fmt::Display for Link {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl fmt::Display for LinkTarget {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl fmt::Display for LinkPair {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} -> {}", self.link, self.target)
-    }
 }
 
 
