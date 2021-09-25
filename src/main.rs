@@ -55,8 +55,12 @@ fn main() -> Result<(), Box<dyn Error>>{
             let link_op = values.next();
             let target_op = values.next();
 
+            //TODO: This is a good place to check that link is not a path and that target is a path
             match (link_op, target_op) {
-                (Some(link), Some(target)) => println!("You said mark with {} for {}", link, target),
+                (Some(link), Some(target)) => {
+                    let _result = mark(&hop_home, LinkPair::new(link, target));
+                    ()
+                }                ,
                 _ => println!("Need both link and target to create a mark")
             }
 
@@ -80,9 +84,10 @@ fn main() -> Result<(), Box<dyn Error>>{
 //     Ok(result)
 // }
 
-#[allow(dead_code, unused_variables)]
+#[allow(unused_variables)]
 fn mark(hop_home: &PathBuf, pair: LinkPair) -> Result<(), io::Error> {
-    todo!()
+    println!("You said mark with {} for {}", pair.link, pair.target);
+    Ok(())
 }
 
 fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
@@ -127,7 +132,7 @@ fn get_home() -> Result<PathBuf, io::Error> {
 fn get_links(path: &PathBuf) -> Result<Vec<LinkPair>, io::Error> {
     let x = fs::read_dir(path)?;
     x.map(|res| res.and_then(|entry| create_link_pair(entry)))
-    .collect::<Result<Vec<_>, io::Error>>() //traverse
+    .collect::<Result<Vec<_>, io::Error>>() //sequence
 }
 
 fn create_link_pair(dir_entry: DirEntry) -> io::Result<LinkPair> {

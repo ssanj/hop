@@ -13,6 +13,15 @@ pub struct LinkPair {
     pub target: LinkTarget
 }
 
+impl LinkPair {
+  pub fn new(link: &str, target: &str) -> Self {
+    LinkPair {
+      link: Link(link.to_string()),
+      target: LinkTarget(target.to_string())
+    }
+  }
+}
+
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
