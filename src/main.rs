@@ -28,9 +28,17 @@ fn main() -> Result<(), Box<dyn Error>>{
                 .value_name("NAME")
                 .help("Jump to a named directory")
                 .takes_value(true)
+        )
+        .arg(
+            Arg::with_name("mark")
+                .short("m")
+                .long("mark")
+                .value_names(&["NAME", "PATH"])
+                .help("Mark a named directory")
+                .takes_value(true)
         );
 
-     let mut app2 = app.clone();
+     let mut app2 = app.clone(); //we need this close to display usage on error
      let matches = app.get_matches();
 
     let hop_home = get_home()?.join(".hop");
@@ -42,12 +50,39 @@ fn main() -> Result<(), Box<dyn Error>>{
         } else if let Some(j) = matches.value_of("jump") {
             let _result = jump_to(&hop_home, Link(j.to_string()));
             ()
+        } else if let Some(m) = matches.values_of("mark") {
+            let mut values = m.clone();
+            let link_op = values.next();
+            let target_op = values.next();
+
+            match (link_op, target_op) {
+                (Some(link), Some(target)) => println!("You said mark with {} for {}", link, target),
+                _ => println!("Need both link and target to create a mark")
+            }
+
         } else {
             let _result = app2.print_help();
             ()
         };
 
     Ok(program)
+}
+
+// #[allow(dead_code)]
+// fn process_links<F, G, A>(hop_home: &PathBuf, f: F) -> Result<(), io::Error> where
+//     F: Fn(Vec<LinkPair>)
+//  {
+//     let result = match get_links(hop_home) {
+//         Ok(link_pairs) => f(link_pairs),
+//         Err(e) => eprintln!("Could not retrieve links: {}", e)
+//     };
+
+//     Ok(result)
+// }
+
+#[allow(dead_code, unused_variables)]
+fn mark(hop_home: &PathBuf, pair: LinkPair) -> Result<(), io::Error> {
+    todo!()
 }
 
 fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
