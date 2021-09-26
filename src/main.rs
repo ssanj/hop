@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::io;
 use std::path::PathBuf;
 use std::fs::{self, DirEntry};
 use dirs::home_dir;
@@ -7,9 +6,11 @@ use clap::{App, Arg};
 use models::{Link, LinkPair, LinkTarget};
 use std::path::Path;
 use std::os::unix::fs as nixfs;
+use std::io;
 
 mod models;
 
+type HopEffect<T> = io::Result<T>;
 
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{
@@ -37,6 +38,14 @@ fn main() -> Result<(), Box<dyn Error>>{
                 .long("mark")
                 .value_names(&["NAME", "PATH"])
                 .help("Mark a named directory")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::with_name("delete")
+                .short("d")
+                .long("delete")
+                .value_name("NAME")
+                .help("Delete a named directory")
                 .takes_value(true)
         );
 
@@ -75,6 +84,9 @@ fn main() -> Result<(), Box<dyn Error>>{
                 _ => println!("Need both link and target to create a mark")
             }
 
+        } else if let Some(d) = matches.value_of("delete") {
+            let _result = delete(&hop_home, Link(d.to_string()));
+            ()
         } else {
             let _result = app2.print_help();
             ()
@@ -95,8 +107,28 @@ fn main() -> Result<(), Box<dyn Error>>{
 //     Ok(result)
 // }
 
-#[allow(unused_variables)]
-fn mark(hop_home: &PathBuf, pair: LinkPair) -> Result<(), io::Error> {
+fn delete(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
+
+    let result = match get_links(hop_home) {
+        Ok(link_pairs) => {
+           match link_pairs.iter().find(|lp| lp.link == link) {
+            Some(pair) => {
+                println!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
+                let mut buffer = String::new();
+                io::stdin().read_line(&mut buffer)?;
+                println!("You replied with {}", buffer);
+            },
+
+            None => eprintln!("Could not find link named:{} to delete", link)
+           }
+        },
+
+        Err(e) => println!("Could not retrieve links: {}", e)
+    };
+    Ok(result)
+}
+
+fn mark(hop_home: &PathBuf, pair: LinkPair) -> HopEffect<()> {
     println!("You said mark with {} for {}", pair.link, pair.target);
     let mut symlink_path = hop_home.clone();
     symlink_path.push(pair.link);
@@ -104,7 +136,7 @@ fn mark(hop_home: &PathBuf, pair: LinkPair) -> Result<(), io::Error> {
     nixfs::symlink(pair.target, symlink_path)
 }
 
-fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
+fn jump_to(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
     let result = match get_links(hop_home) {
         Ok(link_pairs) => {
             match link_pairs.iter().find(|&lp| lp.link == link) {
@@ -119,7 +151,7 @@ fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {
     Ok(result)
 }
 
-fn list_links(hop_home: &PathBuf) -> Result<(), io::Error> {
+fn list_links(hop_home: &PathBuf) -> HopEffect<()> {
     let result = match get_links(hop_home) {
         Ok(link_pairs) => {
             for lp in link_pairs {
@@ -143,13 +175,13 @@ fn get_home() -> Result<PathBuf, io::Error> {
 }
 
 
-fn get_links(path: &PathBuf) -> Result<Vec<LinkPair>, io::Error> {
+fn get_links(path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
     let x = fs::read_dir(path)?;
     x.map(|res| res.and_then(|entry| create_link_pair(entry)))
     .collect::<Result<Vec<_>, io::Error>>() //sequence
 }
 
-fn create_link_pair(dir_entry: DirEntry) -> io::Result<LinkPair> {
+fn create_link_pair(dir_entry: DirEntry) -> HopEffect<LinkPair> {
     let link_path = dir_entry.path();
     //Choose to display a lossy string
     let link = dir_entry.file_name().to_string_lossy().to_string();
