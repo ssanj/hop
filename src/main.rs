@@ -5,6 +5,7 @@ use std::fs::{self, DirEntry};
 use dirs::home_dir;
 use clap::{App, Arg};
 use models::{Link, LinkPair, LinkTarget};
+use std::path::Path;
 
 mod models;
 
@@ -58,9 +59,18 @@ fn main() -> Result<(), Box<dyn Error>>{
             //TODO: This is a good place to check that link is not a path and that target is a path
             match (link_op, target_op) {
                 (Some(link), Some(target)) => {
-                    let _result = mark(&hop_home, LinkPair::new(link, target));
-                    ()
-                }                ,
+                    let target_path = Path::new(target);
+                    if target_path.exists(){
+                        if target_path.is_dir() {
+                            let _result = mark(&hop_home, LinkPair::new(link, target));
+                            ()
+                        } else {
+                            eprintln!("{} is not a directory.", target)
+                        }
+                    } else {
+                        eprintln!("{} does not exist or you do not have permission to it.", target)
+                    }
+                },
                 _ => println!("Need both link and target to create a mark")
             }
 
