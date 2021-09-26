@@ -6,6 +6,7 @@ use dirs::home_dir;
 use clap::{App, Arg};
 use models::{Link, LinkPair, LinkTarget};
 use std::path::Path;
+use std::os::unix::fs as nixfs;
 
 mod models;
 
@@ -56,13 +57,13 @@ fn main() -> Result<(), Box<dyn Error>>{
             let link_op = values.next();
             let target_op = values.next();
 
-            //TODO: This is a good place to check that link is not a path and that target is a path
             match (link_op, target_op) {
                 (Some(link), Some(target)) => {
                     let target_path = Path::new(target);
                     if target_path.exists(){
                         if target_path.is_dir() {
                             let _result = mark(&hop_home, LinkPair::new(link, target));
+                            //we should dump out the error on all these
                             ()
                         } else {
                             eprintln!("{} is not a directory.", target)
@@ -97,7 +98,10 @@ fn main() -> Result<(), Box<dyn Error>>{
 #[allow(unused_variables)]
 fn mark(hop_home: &PathBuf, pair: LinkPair) -> Result<(), io::Error> {
     println!("You said mark with {} for {}", pair.link, pair.target);
-    Ok(())
+    let mut symlink_path = hop_home.clone();
+    symlink_path.push(pair.link);
+
+    nixfs::symlink(pair.target, symlink_path)
 }
 
 fn jump_to(hop_home: &PathBuf, link: Link) -> Result<(), io::Error> {

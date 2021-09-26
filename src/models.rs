@@ -1,5 +1,5 @@
 use std::fmt;
-
+use std::path::Path;
 
 #[derive(Debug, PartialEq)]
 pub struct Link(pub String);
@@ -25,6 +25,19 @@ impl LinkPair {
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+
+impl AsRef<Path> for Link {
+    fn as_ref(&self) -> &Path {
+      &self.0.as_ref()
+    }
+}
+
+impl AsRef<Path> for LinkTarget {
+    fn as_ref(&self) -> &Path {
+      &self.0.as_ref()
     }
 }
 
