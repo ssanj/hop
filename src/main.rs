@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>>{
             ()
         } else {
             let _result = app2.print_help();
-            ()
+            println!();
         };
 
     Ok(program)
