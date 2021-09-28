@@ -108,16 +108,39 @@ fn main() -> Result<(), Box<dyn Error>>{
 //     Ok(result)
 // }
 
+fn io_error(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::Other, message.clone())
+}
+
+fn prompt_user<Y, N, T>(message: &str, yes_action: Y, no_action: N) -> HopEffect<T> where
+    Y: FnOnce() -> HopEffect<T>,
+    N: FnOnce(String) -> HopEffect<T>
+{
+    println!("{}", message);
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer)?;
+    let response = buffer.lines().next().ok_or(io_error("Could not retrieve lines from stdio"))?;
+    match response {
+        "Y" | "y"  => yes_action(),
+        other => no_action(other.to_string())
+    }
+}
+
 fn delete(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
 
     let result = match get_links(hop_home) {
         Ok(link_pairs) => {
            match link_pairs.iter().find(|lp| lp.link == link) {
             Some(pair) => {
-                println!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
-                let mut buffer = String::new();
-                io::stdin().read_line(&mut buffer)?;
-                println!("You replied with {}", buffer);
+                let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
+                let no_action = |error| Ok(println!("Aborting delete of {} because you said: {}", pair.link, error));
+                let yes_action = || {
+                    let file_path = (hop_home.clone()).join(&link);
+                    fs::remove_file(file_path)?;
+                    Ok(println!("Removed link {} which pointed to {}", &link, &pair.target))
+                };
+
+                prompt_user(&prompt_message, yes_action, no_action)?
             },
 
             None => eprintln!("Could not find link named:{} to delete", link)
