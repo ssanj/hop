@@ -180,10 +180,6 @@ fn list_links(hop_home: &PathBuf) -> HopEffect<()> {
     Ok(result)
 }
 
-#[allow(dead_code)]
-fn get_file_name(dir: PathBuf) -> Option<String> {
-    Some(dir.file_name()?.to_str()?.to_string())
-}
 
 fn get_home() -> Result<PathBuf, io::Error> {
     home_dir().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not get home directory"))
