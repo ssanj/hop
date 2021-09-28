@@ -66,6 +66,7 @@ fn main() -> Result<(), Box<dyn Error>>{
             let link_op = values.next();
             let target_op = values.next();
 
+            //We can use something like a command pattern here.
             match (link_op, target_op) {
                 (Some(link), Some(target)) => {
                     let target_path = Path::new(target);
