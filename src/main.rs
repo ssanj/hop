@@ -141,11 +141,14 @@ fn delete(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
 }
 
 fn mark(hop_home: &PathBuf, pair: LinkPair) -> HopEffect<()> {
-    println!("You said mark with {} for {}", pair.link, pair.target);
-    let mut symlink_path = hop_home.clone();
-    symlink_path.push(pair.link);
+    let symlink_path = (hop_home.clone()).join(&pair.link);
 
-    nixfs::symlink(pair.target, symlink_path)
+    if symlink_path.exists() {
+        Ok(eprintln!("A link named `{}` already exists. Aborting mark creation.", &pair.link))
+    } else {
+        nixfs::symlink(&pair.target, symlink_path)
+            .map(|_| println!("Successfully created {} pointing to {}", &pair.link, pair.target))
+    }
 }
 
 fn jump_to(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
