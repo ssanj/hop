@@ -8,9 +8,9 @@ use std::path::Path;
 use std::os::unix::fs as nixfs;
 use std::io;
 
-mod models;
+use crate::models::HopEffect;
 
-type HopEffect<T> = io::Result<T>;
+mod models;
 
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{

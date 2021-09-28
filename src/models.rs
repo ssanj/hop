@@ -1,5 +1,8 @@
 use std::fmt;
 use std::path::Path;
+use std::io;
+
+pub type HopEffect<T> = io::Result<T>;
 
 #[derive(Debug, PartialEq)]
 pub struct Link(pub String);
