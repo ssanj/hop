@@ -96,25 +96,13 @@ fn main() -> Result<(), Box<dyn Error>>{
     Ok(program)
 }
 
-// #[allow(dead_code)]
-// fn process_links<F, G, A>(hop_home: &PathBuf, f: F) -> Result<(), io::Error> where
-//     F: Fn(Vec<LinkPair>)
-//  {
-//     let result = match get_links(hop_home) {
-//         Ok(link_pairs) => f(link_pairs),
-//         Err(e) => eprintln!("Could not retrieve links: {}", e)
-//     };
-
-//     Ok(result)
-// }
-
 fn io_error(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, message.clone())
 }
 
 fn prompt_user<Y, N, T>(message: &str, yes_action: Y, no_action: N) -> HopEffect<T> where
     Y: FnOnce() -> HopEffect<T>,
-    N: FnOnce(String) -> HopEffect<T>
+    N: FnOnce() -> HopEffect<T>
 {
     println!("{}", message);
     let mut buffer = String::new();
@@ -122,7 +110,7 @@ fn prompt_user<Y, N, T>(message: &str, yes_action: Y, no_action: N) -> HopEffect
     let response = buffer.lines().next().ok_or(io_error("Could not retrieve lines from stdio"))?;
     match response {
         "Y" | "y"  => yes_action(),
-        other => no_action(other.to_string())
+        _ => no_action()
     }
 }
 
@@ -133,7 +121,7 @@ fn delete(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
            match link_pairs.iter().find(|lp| lp.link == link) {
             Some(pair) => {
                 let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
-                let no_action = |error| Ok(println!("Aborting delete of {} because you said: {}", pair.link, error));
+                let no_action = || Ok(println!("Aborting delete of {}", pair.link));
                 let yes_action = || {
                     let file_path = (hop_home.clone()).join(&link);
                     fs::remove_file(file_path)?;
