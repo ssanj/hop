@@ -12,12 +12,12 @@ impl <T> HopProgram<T>
     T : Dirs + StdIO + SymLinks
   {
 
-  pub fn list_links(&self) -> HopEffect<()> {
+  pub fn list_links(&mut self) -> HopEffect<()> {
         let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
         let entries = self.value.read_dir_links(&hop_home_dir)?;
 
         for lp in entries {
-            println!("{}", lp.link)
+            self.value.println(&format!("{}", lp.link))
         }
 
         Ok(())

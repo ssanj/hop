@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     let hop_home = get_home()?.join(".hop");
 
-    let hop_program = hop::HopProgram { value: Prod, cfg_dir: ".hop".to_string() };
+    let mut hop_program = hop::HopProgram { value: Prod, cfg_dir: ".hop".to_string() };
 
     let program =
         if matches.is_present("list") {
