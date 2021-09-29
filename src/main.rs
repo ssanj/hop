@@ -7,10 +7,31 @@ use models::{Link, LinkPair, LinkTarget};
 use std::path::Path;
 use std::os::unix::fs as nixfs;
 use std::io;
+use algebra::std_io;
 
 use crate::models::HopEffect;
 
 mod models;
+mod algebra;
+
+struct Prod;
+
+impl std_io::StdIO for Prod {
+    fn println(&mut self, message: &str) {
+        println!("{}", message)
+    }
+
+    fn eprintln(&mut self, message: &str) {
+        eprintln!("{}", message)
+    }
+
+    fn readln(&mut self) -> io::Result<String> {
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer)?;
+        let line = buffer.lines().next().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not read stdin line"))?;
+        Ok(line.to_owned())
+    }
+}
 
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{
