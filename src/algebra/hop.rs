@@ -16,9 +16,7 @@ impl <T> HopProgram<T>
         let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
         let entries = self.value.read_dir_links(&hop_home_dir)?;
 
-        for lp in entries {
-            self.value.println(&format!("{}", lp.link))
-        }
+        entries.iter().for_each(|lp| self.value.println(&format!("{}", lp.link)));
 
         Ok(())
   }
