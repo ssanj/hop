@@ -8,6 +8,9 @@ use std::path::Path;
 use std::os::unix::fs as nixfs;
 use std::io;
 use algebra::std_io;
+use algebra::dirs::{self as d, Dirs};
+use algebra::hop;
+use algebra::symlinks;
 
 use crate::models::HopEffect;
 
@@ -30,6 +33,18 @@ impl std_io::StdIO for Prod {
         io::stdin().read_line(&mut buffer)?;
         let line = buffer.lines().next().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not read stdin line"))?;
         Ok(line.to_owned())
+    }
+}
+
+impl d::Dirs for Prod {
+  fn get_hop_home(&self, path: &str) -> HopEffect<PathBuf> {
+    Ok(get_home()?.join(path))
+  }
+}
+
+impl symlinks::SymLinks for Prod {
+    fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
+        get_links(dir_path)
     }
 }
 
@@ -75,9 +90,12 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     let hop_home = get_home()?.join(".hop");
 
+    let hop_program = hop::HopProgram { value: Prod, cfg_dir: ".hop".to_string() };
+
     let program =
         if matches.is_present("list") {
-            let _result = list_links(&hop_home);
+            // let _result = list_links(&hop_home);
+            hop_program.list_links().unwrap();
             ()
         } else if let Some(j) = matches.value_of("jump") {
             let _result = jump_to(&hop_home, Link(j.to_string()));
@@ -217,6 +235,7 @@ fn create_link_pair(dir_entry: DirEntry) -> HopEffect<LinkPair> {
     let link_path = dir_entry.path();
     //Choose to display a lossy string
     let link = dir_entry.file_name().to_string_lossy().to_string();
+    //what if the file is not a link? We should filter those out
     let target_res = fs::read_link(link_path);
 
     target_res.map(|target| LinkPair{ link: Link(link), target: LinkTarget( target.to_string_lossy().to_string()) })
