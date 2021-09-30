@@ -8,7 +8,7 @@ use std::path::Path;
 use std::os::unix::fs as nixfs;
 use std::io;
 use algebra::hop;
-use prod::Prod;
+use prod::prod_models::Prod;
 
 use crate::models::HopEffect;
 
