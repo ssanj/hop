@@ -2,6 +2,7 @@ use crate::models::HopEffect;
 
 use super::{user_dirs::UserDirs, std_io::StdIO, symlinks::SymLinks};
 
+/// The data required to run hop
 pub struct HopProgram<T>{
     pub value: T,
     pub cfg_dir: String
