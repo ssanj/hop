@@ -1,6 +1,6 @@
 use std::path::PathBuf;
-use crate::models::{LinkPair, HopEffect};
+use crate::models::HopEffect;
 
-pub trait Dirs {
+pub trait UserDirs {
   fn get_hop_home(&self, path: &str) -> HopEffect<PathBuf>;
 }

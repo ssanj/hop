@@ -1,15 +1,15 @@
 use crate::models::HopEffect;
 
-use super::{dirs::Dirs, std_io::StdIO, symlinks::SymLinks};
+use super::{user_dirs::UserDirs, std_io::StdIO, symlinks::SymLinks};
 
 pub struct HopProgram<T>{
     pub value: T,
     pub cfg_dir: String
-  }
+}
 
 impl <T> HopProgram<T>
   where
-    T : Dirs + StdIO + SymLinks
+    T : UserDirs + StdIO + SymLinks
   {
 
   pub fn list_links(&mut self) -> HopEffect<()> {

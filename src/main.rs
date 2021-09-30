@@ -7,46 +7,14 @@ use models::{Link, LinkPair, LinkTarget};
 use std::path::Path;
 use std::os::unix::fs as nixfs;
 use std::io;
-use algebra::std_io;
-use algebra::dirs::{self as d, Dirs};
 use algebra::hop;
-use algebra::symlinks;
+use prod::Prod;
 
 use crate::models::HopEffect;
 
 mod models;
 mod algebra;
-
-struct Prod;
-
-impl std_io::StdIO for Prod {
-    fn println(&mut self, message: &str) {
-        println!("{}", message)
-    }
-
-    fn eprintln(&mut self, message: &str) {
-        eprintln!("{}", message)
-    }
-
-    fn readln(&mut self) -> io::Result<String> {
-        let mut buffer = String::new();
-        io::stdin().read_line(&mut buffer)?;
-        let line = buffer.lines().next().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not read stdin line"))?;
-        Ok(line.to_owned())
-    }
-}
-
-impl d::Dirs for Prod {
-  fn get_hop_home(&self, path: &str) -> HopEffect<PathBuf> {
-    Ok(get_home()?.join(path))
-  }
-}
-
-impl symlinks::SymLinks for Prod {
-    fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
-        get_links(dir_path)
-    }
-}
+mod prod;
 
 //todo: How do we test any?
 fn main() -> Result<(), Box<dyn Error>>{
@@ -200,20 +168,6 @@ fn jump_to(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
         },
 
         Err(e) => eprintln!("Could not retrieve links: {}", e)
-    };
-
-    Ok(result)
-}
-
-fn list_links(hop_home: &PathBuf) -> HopEffect<()> {
-    let result = match get_links(hop_home) {
-        Ok(link_pairs) => {
-            for lp in link_pairs {
-                println!("{}", lp.link)
-            }
-        },
-
-        Err(e) => println!("Could not retrieve links: {}", e)
     };
 
     Ok(result)
