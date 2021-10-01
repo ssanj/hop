@@ -22,8 +22,8 @@ impl <T> HopProgram<T>
   pub fn jump_target(&mut self, link: Link) -> HopEffect<()> {
     let entries = self.get_link_pairs()?;
     let result = match entries.iter().find(|&lp| lp.link == link) {
-        Some(found_lp) => println!("{}", found_lp.target),
-        None => println!("Could not find link: {}", link)
+        Some(found_lp) => self.value.println(&format!("{}", found_lp.target)),
+        None => self.value.println(&format!("Could not find link: {}", link))
     };
 
     Ok(result)
@@ -43,7 +43,7 @@ impl <T> HopProgram<T>
 #[cfg(test)]
 mod tests {
     use crate::algebra::{std_io::StdIO, symlinks::SymLinks, user_dirs::UserDirs};
-    use crate::models::{HopEffect, LinkPair};
+    use crate::models::{HopEffect, LinkPair, Link};
     use super::HopProgram;
 
     use std::path::PathBuf;
@@ -89,7 +89,6 @@ mod tests {
         }
       }
     }
-
 
     #[test]
     fn list_links_success() {
@@ -146,6 +145,53 @@ mod tests {
 
       match program.list_links() {
         Ok(_) => assert!(output.is_empty(), "Expected output to be empty but got: {:?}" ,output),
+        Err(e) => panic!("{}: Expected an Ok but got err", e)
+      }
+    }
+
+    #[test]
+    fn jump_target_success() {
+      let mut output = vec![];
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
+
+      let test_val = Test { out: &mut output, get_hop_home: None, read_dir_links: Ok(read_links) };
+      let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.jump_target(Link::new("myOtherLink")) {
+        Ok(_) => assert_eq!(&vec!["/my/path/to/Otherlink".to_string()], &output),
+        Err(e) => panic!("{}: Expected an Ok but got err", e)
+      }
+    }
+
+    #[test]
+    fn jump_target_not_found() {
+      let mut output = vec![];
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
+
+      let test_val = Test { out: &mut output, get_hop_home: None, read_dir_links: Ok(read_links) };
+      let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.jump_target(Link::new("bizarre")) {
+        Ok(_) => assert_eq!(&vec!["Could not find link: bizarre".to_string()], &output),
+        Err(e) => panic!("{}: Expected an Ok but got err", e)
+      }
+    }
+
+    #[test]
+    fn jump_target_without_links() {
+      let mut output = vec![];
+      let read_links = vec![];
+
+      let test_val = Test { out: &mut output, get_hop_home: None, read_dir_links: Ok(read_links) };
+      let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.jump_target(Link::new("myLink")) {
+        Ok(_) => assert_eq!(&vec!["Could not find link: myLink".to_string()], &output),
         Err(e) => panic!("{}: Expected an Ok but got err", e)
       }
     }
