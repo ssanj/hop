@@ -4,13 +4,13 @@ use std::io;
 
 pub type HopEffect<T> = io::Result<T>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Link(pub String);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LinkTarget(pub String);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LinkPair {
     pub link: Link,
     pub target: LinkTarget
