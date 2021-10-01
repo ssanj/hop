@@ -7,6 +7,12 @@ pub type HopEffect<T> = io::Result<T>;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Link(pub String);
 
+impl Link {
+    pub fn new(link: &str) -> Self {
+        Self(link.to_string())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct LinkTarget(pub String);
 

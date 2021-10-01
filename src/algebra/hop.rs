@@ -1,4 +1,4 @@
-use crate::models::HopEffect;
+use crate::models::{HopEffect, LinkPair, Link};
 
 use super::{user_dirs::UserDirs, std_io::StdIO, symlinks::SymLinks};
 
@@ -14,13 +14,30 @@ impl <T> HopProgram<T>
   {
 
   pub fn list_links(&mut self) -> HopEffect<()> {
-        let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
-        let entries = self.value.read_dir_links(&hop_home_dir)?;
-
-        entries.iter().for_each(|lp| self.value.println(&format!("{}", lp.link)));
-
-        Ok(())
+    let entries = self.get_link_pairs()?;
+    entries.iter().for_each(|lp| self.value.println(&format!("{}", lp.link)));
+    Ok(())
   }
+
+  pub fn jump_target(&mut self, link: Link) -> HopEffect<()> {
+    let entries = self.get_link_pairs()?;
+    let result = match entries.iter().find(|&lp| lp.link == link) {
+        Some(found_lp) => println!("{}", found_lp.target),
+        None => println!("Could not find link: {}", link)
+    };
+
+    Ok(result)
+  }
+
+  //Ideally we just get this "capability", as it makes it easier to test
+  //This capability can depend on UserDirs + StdIO + SymLinks
+  fn get_link_pairs(&mut self) -> HopEffect<Vec<LinkPair>> {
+      let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
+      let entries = self.value.read_dir_links(&hop_home_dir)?;
+
+      Ok(entries.to_vec())
+  }
+
 }
 
 #[cfg(test)]

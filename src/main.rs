@@ -62,12 +62,15 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     let program =
         if matches.is_present("list") {
-            // let _result = list_links(&hop_home);
-            hop_program.list_links().unwrap();
-            ()
+            match hop_program.list_links() {
+                Ok(_) => (),
+                Err(e) => eprintln!("Could not retrieve list of links: {}", e)
+            }
         } else if let Some(j) = matches.value_of("jump") {
-            let _result = jump_to(&hop_home, Link(j.to_string()));
-            ()
+            match hop_program.jump_target(Link::new(j)) {
+                Ok(_) => (),
+                Err(e) => eprintln!("Could not retrieve jump target: {}", e)
+            }
         } else if let Some(m) = matches.values_of("mark") {
             let mut values = m.clone();
             let link_op = values.next();
@@ -158,20 +161,20 @@ fn mark(hop_home: &PathBuf, pair: LinkPair) -> HopEffect<()> {
     }
 }
 
-fn jump_to(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
-    let result = match get_links(hop_home) {
-        Ok(link_pairs) => {
-            match link_pairs.iter().find(|&lp| lp.link == link) {
-                Some(found_lp) => println!("{}", found_lp.target),
-                None => println!("Could not find link: {}", link)
-            }
-        },
+// fn jump_to(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
+//     let result = match get_links(hop_home) {
+//         Ok(link_pairs) => {
+//             match link_pairs.iter().find(|&lp| lp.link == link) {
+//                 Some(found_lp) => println!("{}", found_lp.target),
+//                 None => println!("Could not find link: {}", link)
+//             }
+//         },
 
-        Err(e) => eprintln!("Could not retrieve links: {}", e)
-    };
+//         Err(e) => eprintln!("Could not retrieve links: {}", e)
+//     };
 
-    Ok(result)
-}
+//     Ok(result)
+// }
 
 
 fn get_home() -> Result<PathBuf, io::Error> {
