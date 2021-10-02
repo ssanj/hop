@@ -1,5 +1,5 @@
 use std::fmt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io;
 
 pub type HopEffect<T> = io::Result<T>;
@@ -15,6 +15,14 @@ impl Link {
 
 #[derive(Debug, Clone)]
 pub struct LinkTarget(pub String);
+
+
+impl LinkTarget {
+
+    pub fn to_path_buf(&self) -> PathBuf {
+        PathBuf::from(&self.0)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct LinkPair {

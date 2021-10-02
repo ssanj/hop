@@ -73,26 +73,12 @@ fn main() -> Result<(), Box<dyn Error>>{
             }
         } else if let Some(m) = matches.values_of("mark") {
             let mut values = m.clone();
-            let link_op = values.next();
-            let target_op = values.next();
+            let link = values.next().expect("expected link name");
+            let target = values.next().expect("expected target value");
 
-            //We can use something like a command pattern here.
-            match (link_op, target_op) {
-                (Some(link), Some(target)) => {
-                    let target_path = Path::new(target);
-                    if target_path.exists(){
-                        if target_path.is_dir() {
-                            let _result = mark(&hop_home, LinkPair::new(link, target));
-                            //we should dump out the error on all these
-                            ()
-                        } else {
-                            eprintln!("{} is not a directory.", target)
-                        }
-                    } else {
-                        eprintln!("{} does not exist or you do not have permission to it.", target)
-                    }
-                },
-                _ => println!("Need both link and target to create a mark")
+            match hop_program.mark_dir(LinkPair::new(link, target)) {
+                Ok(_) => (),
+                Err(e) => eprintln!("Could not mark directory: {}", e)
             }
 
         } else if let Some(d) = matches.value_of("delete") {
@@ -160,21 +146,6 @@ fn mark(hop_home: &PathBuf, pair: LinkPair) -> HopEffect<()> {
             .map(|_| println!("Successfully created {} pointing to {}", &pair.link, pair.target))
     }
 }
-
-// fn jump_to(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
-//     let result = match get_links(hop_home) {
-//         Ok(link_pairs) => {
-//             match link_pairs.iter().find(|&lp| lp.link == link) {
-//                 Some(found_lp) => println!("{}", found_lp.target),
-//                 None => println!("Could not find link: {}", link)
-//             }
-//         },
-
-//         Err(e) => eprintln!("Could not retrieve links: {}", e)
-//     };
-
-//     Ok(result)
-// }
 
 
 fn get_home() -> Result<PathBuf, io::Error> {

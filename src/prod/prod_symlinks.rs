@@ -1,15 +1,24 @@
 use crate::models::{HopEffect, LinkPair, LinkTarget, Link};
 use super::prod_models::Prod;
 
-use crate::algebra::symlinks::SymLinks;
+use crate::algebra::symlinks::{SymLinks, SymLink};
 use std::fs::{self, DirEntry};
 
 use std::path::PathBuf;
 use std::io;
+use std::os::unix::fs as nixfs;
 
 impl SymLinks for Prod {
     fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
         get_links(dir_path)
+    }
+
+    fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()> {
+        nixfs::symlink(target, symlink)
+    }
+
+    fn link_exists(&self, symLink: &PathBuf) -> HopEffect<bool> {
+        Ok(symLink.exists())
     }
 }
 

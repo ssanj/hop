@@ -1,6 +1,7 @@
-use crate::models::{HopEffect, LinkPair, Link};
+use crate::{io_error, models::{HopEffect, LinkPair, Link}};
 
-use super::{user_dirs::UserDirs, std_io::StdIO, symlinks::SymLinks};
+use super::{std_io::StdIO, symlinks::SymLinks, symlinks::SymLink, user_dirs::UserDirs, directories::Directories};
+use std::path::PathBuf;
 
 /// The data required to run hop
 pub struct HopProgram<T>{
@@ -10,7 +11,7 @@ pub struct HopProgram<T>{
 
 impl <T> HopProgram<T>
   where
-    T : UserDirs + StdIO + SymLinks
+    T : UserDirs + StdIO + SymLinks + Directories
   {
 
   pub fn list_links(&mut self) -> HopEffect<()> {
@@ -38,11 +39,31 @@ impl <T> HopProgram<T>
       Ok(entries.to_vec())
   }
 
+  pub fn mark_dir(&mut self, pair: LinkPair) -> HopEffect<()> {
+    let hop_home = self.value.get_hop_home(&self.cfg_dir)?;
+    let symlink_path = (hop_home.clone()).join(&pair.link);
+
+    let target_path = pair.target.to_path_buf();
+
+    //TODO: Send in a LinkTarget
+    if self.value.dir_exists(&target_path)? {
+      //TODO: Send in a SymLink
+      if self.value.link_exists(&symlink_path)? {
+        Err(io_error(&format!("A link named `{}` already exists. Aborting mark creation.", &pair.link)))
+      } else {
+        self.value.write_link(&SymLink(symlink_path), &pair.target.to_path_buf())
+      }
+    } else {
+      Err(io_error(&format!("A directory named `{}` does not exist or you do not have permission to it.", &pair.target)))
+    }
+  }
+
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::algebra::{std_io::StdIO, symlinks::SymLinks, user_dirs::UserDirs};
+    use crate::algebra::{std_io::StdIO, user_dirs::UserDirs, directories::Directories};
+    use crate::algebra::symlinks::{SymLinks, SymLink};
     use crate::models::{HopEffect, LinkPair, Link};
     use super::HopProgram;
 
@@ -87,6 +108,21 @@ mod tests {
           Ok(links) => Ok(links.to_vec()),
           Err(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string()))
         }
+      }
+
+      fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()> {
+        todo!()
+      }
+
+      fn link_exists(&self, file_name: &PathBuf) -> HopEffect<bool> {
+        todo!()
+      }
+
+    }
+
+    impl Directories for Test<'_> {
+      fn dir_exists(&self, dir_path: &PathBuf) -> HopEffect<bool> {
+        todo!()
       }
     }
 
