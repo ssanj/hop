@@ -2,6 +2,7 @@ use crate::{io_error, models::{HopEffect, LinkPair, Link}};
 
 use super::{std_io::StdIO, symlinks::SymLinks, symlinks::SymLink, user_dirs::UserDirs, directories::Directories};
 use std::path::PathBuf;
+use std::fs;
 
 /// The data required to run hop
 pub struct HopProgram<T>{
@@ -56,6 +57,47 @@ impl <T> HopProgram<T>
     } else {
       Err(io_error(&format!("A directory named `{}` does not exist or you do not have permission to it.", &pair.target)))
     }
+  }
+
+  // pub fn delete(&mut self, link: Link) -> HopEffect<()> {
+  //   let link_pairs = self.get_link_pairs()?;
+
+  //   match link_pairs.iter().find(|lp| lp.link == link) {
+  //    Some(pair) => {
+  //        let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
+
+  //        let no_action = || {
+  //         &self.value.println(&format!("Aborting delete of {}", pair.link));
+  //         Ok(())
+  //       };
+
+  //        let yes_action = || {
+  //            let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
+  //            let file_path = (hop_home.clone()).join(&link);
+  //            fs::remove_file(file_path)?;
+  //            // &self.value.println(&format!("Removed link {} which pointed to {}", &link, &pair.target));
+  //            Ok(())
+  //        };
+
+  //        self.prompt_user(&prompt_message, yes_action, no_action)
+  //    },
+
+  //    None => Err(io_error(&format!("Could not find link named:{} to delete", link)))
+  //   }
+  // }
+
+  fn prompt_user<Y, N, R>(&self, message: &str, yes_action: Y, no_action: N) -> HopEffect<R> where
+      Y: FnOnce() -> HopEffect<R>,
+      N: FnOnce() -> HopEffect<R>
+  {
+      // self.value.println(message);
+      // let buffer = self.value.readln()?;
+      // let response = buffer.lines().next().ok_or(io_error("Could not retrieve lines from stdio"))?;
+      // match response {
+      //     "Y" | "y"  => yes_action(),
+      //     _ => no_action()
+      // }
+      todo!()
   }
 
 }
