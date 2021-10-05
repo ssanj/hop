@@ -1,8 +1,8 @@
 use crate::models::HopEffect;
 
 pub trait StdIO {
-    fn println(&mut self, message: &str);
-    fn eprintln(&mut self, message: &str);
-    fn readln(&mut self) -> HopEffect<String>;
+    fn println(&self, message: &str);
+    fn eprintln(&self, message: &str);
+    fn readln(&self) -> HopEffect<String>;
 }
 
