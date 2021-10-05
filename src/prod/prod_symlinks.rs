@@ -20,7 +20,68 @@ impl SymLinks for Prod {
     fn link_exists(&self, symLink: &PathBuf) -> HopEffect<bool> {
         Ok(symLink.exists())
     }
+
+    fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
+        //need hope home
+        let link_pairs = get_links(&dir_path)?;
+        match link_pairs.iter().find(|lp| lp.link == linkPair.link) {
+            Some(pair) => {
+                // let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
+                // let no_action = || Ok(println!("Aborting delete of {}", pair.link));
+                // let yes_action = || {
+                //     let file_path = (hop_home.clone()).join(&link);
+                //     fs::remove_file(file_path)?;
+                //     Ok(println!("Removed link {} which pointed to {}", &link, &pair.target))
+                // };
+
+                // prompt_user(&prompt_message, yes_action, no_action)?
+                todo!()
+            },
+
+            None => todo!()//eprintln!("Could not find link named:{} to delete", link)
+       }
+    }
 }
+
+// fn prompt_user<Y, N, T>(message: &str, yes_action: Y, no_action: N) -> HopEffect<T> where
+//     Y: FnOnce() -> HopEffect<T>,
+//     N: FnOnce() -> HopEffect<T>
+// {
+//     println!("{}", message);
+//     let mut buffer = String::new();
+//     io::stdin().read_line(&mut buffer)?;
+//     let response = buffer.lines().next().ok_or(io_error("Could not retrieve lines from stdio"))?;
+//     match response {
+//         "Y" | "y"  => yes_action(),
+//         _ => no_action()
+//     }
+// }
+
+// fn delete(hop_home: &PathBuf, link: Link) -> HopEffect<()> {
+
+//     let result = match get_links(hop_home) {
+//         Ok(link_pairs) => {
+//            match link_pairs.iter().find(|lp| lp.link == link) {
+//             Some(pair) => {
+//                 let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
+//                 let no_action = || Ok(println!("Aborting delete of {}", pair.link));
+//                 let yes_action = || {
+//                     let file_path = (hop_home.clone()).join(&link);
+//                     fs::remove_file(file_path)?;
+//                     Ok(println!("Removed link {} which pointed to {}", &link, &pair.target))
+//                 };
+
+//                 prompt_user(&prompt_message, yes_action, no_action)?
+//             },
+
+//             None => eprintln!("Could not find link named:{} to delete", link)
+//            }
+//         },
+
+//         Err(e) => println!("Could not retrieve links: {}", e)
+//     };
+//     Ok(result)
+// }
 
 fn get_links(path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
     let x = fs::read_dir(path)?;

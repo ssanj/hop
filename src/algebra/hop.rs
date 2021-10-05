@@ -126,6 +126,10 @@ mod tests {
         Ok(self.link_exists)
       }
 
+      fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
+        todo!()
+      }
+
     }
 
     impl Directories for Test<'_> {
