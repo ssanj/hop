@@ -115,8 +115,8 @@ mod tests {
     use std::cell::Cell;
 
     //TODO: consider prefixing these fields, so as not to confuse them with the real implementation
-    struct Test {
-      out: Cell<Vec<String>>,
+    struct Test<'a> {
+      out: &'a Cell<Vec<String>>,
       get_hop_home: Option<String>,
       read_dir_links: Result<Vec<LinkPair>, String>,
       dir_exists: bool,
@@ -124,7 +124,7 @@ mod tests {
       write_link: Option<String>
     }
 
-    impl StdIO for Test {
+    impl StdIO for Test<'_> {
 
       fn println(&self, message: &str) {
         let old_vec = &mut self.out.take();
@@ -141,7 +141,7 @@ mod tests {
       }
     }
 
-    impl UserDirs for Test {
+    impl UserDirs for Test<'_> {
       fn get_hop_home(&self, path: &str) -> HopEffect<PathBuf> {
         match &self.get_hop_home {
           Some(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
@@ -151,7 +151,7 @@ mod tests {
       }
     }
 
-    impl SymLinks for Test {
+    impl SymLinks for Test<'_> {
       fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
 
         match &self.read_dir_links {
@@ -177,7 +177,7 @@ mod tests {
 
     }
 
-    impl Directories for Test {
+    impl Directories for Test<'_> {
       fn dir_exists(&self, dir_path: &PathBuf) -> HopEffect<bool> {
         Ok(self.dir_exists)
       }
@@ -192,19 +192,19 @@ mod tests {
         ];
 
       let output = Cell::new(vec![]);
-      let test_val = Test { out: output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.list_links() {
-        Ok(_) => assert_eq!(&vec!["myLink".to_string(), "myOtherLink".to_string()], &program.value.out.into_inner()),
+        Ok(_) => assert_eq!(&vec!["myLink".to_string(), "myOtherLink".to_string()], &output.into_inner()),
         Err(e) => panic!("{}: Expected an Ok but got err", e)
       }
     }
 
     #[test]
     fn list_links_home_dir_failure() {
-      let mut output = Cell::new(vec![]);
+      let output = Cell::new(vec![]);
       let cfg_dir = ".blah".to_string();
-      let value = Test { out: output, get_hop_home: Some("Failed to get home dir".to_string()), read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None };
+      let value = Test { out: &output, get_hop_home: Some("Failed to get home dir".to_string()), read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None };
 
       let mut program = HopProgram { value, cfg_dir };
 
@@ -218,7 +218,7 @@ mod tests {
     fn list_links_read_links_failure() {
       let output = Cell::new(vec![]);
       let cfg_dir = ".blah".to_string();
-      let value = Test { out: output, get_hop_home: None, read_dir_links: Err("Failed to read links".to_string()), dir_exists: true, link_exists: false, write_link: None };
+      let value = Test { out: &output, get_hop_home: None, read_dir_links: Err("Failed to read links".to_string()), dir_exists: true, link_exists: false, write_link: None };
 
       let program = HopProgram { value, cfg_dir };
 
@@ -232,13 +232,13 @@ mod tests {
     fn list_links_read_links_no_result() {
       let output: Cell<Vec<String>> = Cell::new(vec![]);
       let cfg_dir = ".blah".to_string();
-      let value = Test { out: output, get_hop_home: None, read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None };
+      let value = Test { out: &output, get_hop_home: None, read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None };
 
       let program = HopProgram { value, cfg_dir };
 
       match program.list_links() {
         Ok(_) => {
-          let output_vec = program.value.out.into_inner();
+          let output_vec = &output.into_inner();
           assert!(output_vec.is_empty(), "Expected output to be empty but got: {:?}" , output_vec)
         },
         Err(e) => panic!("{}: Expected an Ok but got err", e)
@@ -254,125 +254,125 @@ mod tests {
           LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
         ];
 
-      let test_val = Test { out: output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.jump_target(Link::new("myOtherLink")) {
-        Ok(_) => assert_eq!(&vec!["/my/path/to/Otherlink".to_string()], &program.value.out.into_inner()),
+        Ok(_) => assert_eq!(&vec!["/my/path/to/Otherlink".to_string()], &output.into_inner()),
         Err(e) => panic!("{}: Expected an Ok but got err", e)
       }
     }
 
-    // #[test]
-    // fn jump_target_not_found() {
-    //   let mut output = vec![];
-    //   let read_links =
-    //     vec![
-    //       LinkPair::new("myLink", "/my/path/to/link"),
-    //       LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
-    //     ];
+    #[test]
+    fn jump_target_not_found() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
 
-    //   let test_val = Test { out: &mut output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
-    //   let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.jump_target(Link::new("bizarre")) {
-    //     Ok(_) => assert_eq!(&vec!["Could not find link: bizarre".to_string()], &output),
-    //     Err(e) => panic!("{}: Expected an Ok but got err", e)
-    //   }
-    // }
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.jump_target(Link::new("bizarre")) {
+        Ok(_) => assert_eq!(&vec!["Could not find link: bizarre".to_string()], &output.into_inner()),
+        Err(e) => panic!("{}: Expected an Ok but got err", e)
+      }
+    }
 
-    // #[test]
-    // fn jump_target_without_links() {
-    //   let mut output = vec![];
-    //   let read_links = vec![];
+    #[test]
+    fn jump_target_without_links() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let read_links = vec![];
 
-    //   let test_val = Test { out: &mut output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
-    //   let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.jump_target(Link::new("myLink")) {
-    //     Ok(_) => assert_eq!(&vec!["Could not find link: myLink".to_string()], &output),
-    //     Err(e) => panic!("{}: Expected an Ok but got err", e)
-    //   }
-    // }
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.jump_target(Link::new("myLink")) {
+        Ok(_) => assert_eq!(&vec!["Could not find link: myLink".to_string()], &output.into_inner()),
+        Err(e) => panic!("{}: Expected an Ok but got err", e)
+      }
+    }
 
-    // #[test]
-    // fn mark_dir_success() {
-    //   let mut output = vec![];
-    //   let read_links = vec![];
+    #[test]
+    fn mark_dir_success() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let read_links = vec![];
 
-    //   let test_val =
-    //     Test {
-    //       out: &mut output,
-    //       get_hop_home: None,
-    //       read_dir_links: Ok(read_links),
-    //       dir_exists: true,
-    //       link_exists: false,
-    //       write_link: None
-    //     };
-    //   let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
-    //     Ok(_) => assert_eq!(&Vec::<String>::new(), &output),
-    //     Err(e) => panic!("{}: Expected an Ok but got err", e)
-    //   }
-    // }
+      let test_val =
+        Test {
+          out: &output,
+          get_hop_home: None,
+          read_dir_links: Ok(read_links),
+          dir_exists: true,
+          link_exists: false,
+          write_link: None
+        };
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+        Ok(_) => assert_eq!(&Vec::<String>::new(), &output.into_inner()),
+        Err(e) => panic!("{}: Expected an Ok but got err", e)
+      }
+    }
 
-    // #[test]
-    // fn mark_dir_dir_does_not_exist() {
-    //   let mut output = vec![];
-    //   let read_links = vec![];
+    #[test]
+    fn mark_dir_dir_does_not_exist() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let read_links = vec![];
 
-    //   let test_val =
-    //     Test {
-    //       out: &mut output,
-    //       get_hop_home: None,
-    //       read_dir_links: Ok(read_links),
-    //       dir_exists: false,
-    //       link_exists: false,
-    //       write_link: None
-    //     };
-    //   let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
-    //     Ok(_) => panic!("Expected an Err but got Ok"),
-    //     Err(e) => assert_eq!("A directory named `/my/path/to/link` does not exist or you do not have permission to it.", e.to_string()),
-    //   }
-    // }
+      let test_val =
+        Test {
+          out: &output,
+          get_hop_home: None,
+          read_dir_links: Ok(read_links),
+          dir_exists: false,
+          link_exists: false,
+          write_link: None
+        };
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+        Ok(_) => panic!("Expected an Err but got Ok"),
+        Err(e) => assert_eq!("A directory named `/my/path/to/link` does not exist or you do not have permission to it.", e.to_string()),
+      }
+    }
 
-    // #[test]
-    // fn mark_dir_link_exists() {
-    //   let mut output = vec![];
-    //   let read_links = vec![];
+    #[test]
+    fn mark_dir_link_exists() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let read_links = vec![];
 
-    //   let test_val =
-    //     Test {
-    //       out: &mut output,
-    //       get_hop_home: None,
-    //       read_dir_links: Ok(read_links),
-    //       dir_exists: true,
-    //       link_exists: true,
-    //       write_link: None
-    //     };
-    //   let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
-    //     Ok(_) => panic!("Expected an Err but got Ok"),
-    //     Err(e) => assert_eq!("A link named `myLink` already exists. Aborting mark creation.", e.to_string()),
-    //   }
-    // }
+      let test_val =
+        Test {
+          out: &output,
+          get_hop_home: None,
+          read_dir_links: Ok(read_links),
+          dir_exists: true,
+          link_exists: true,
+          write_link: None
+        };
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+        Ok(_) => panic!("Expected an Err but got Ok"),
+        Err(e) => assert_eq!("A link named `myLink` already exists. Aborting mark creation.", e.to_string()),
+      }
+    }
 
-    // #[test]
-    // fn mark_dir_write_link_failed() {
-    //   let mut output = vec![];
-    //   let read_links = vec![];
+    #[test]
+    fn mark_dir_write_link_failed() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let read_links = vec![];
 
-    //   let test_val =
-    //     Test {
-    //       out: &mut output,
-    //       get_hop_home: None,
-    //       read_dir_links: Ok(read_links),
-    //       dir_exists: true,
-    //       link_exists: false,
-    //       write_link: Some("Could not create link because this is a test".to_string())
-    //     };
-    //   let mut program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
-    //     Ok(_) => panic!("Expected an Err but got Ok"),
-    //     Err(e) => assert_eq!("Could not create link because this is a test", e.to_string()),
-    //   }
-    // }
+      let test_val =
+        Test {
+          out: &output,
+          get_hop_home: None,
+          read_dir_links: Ok(read_links),
+          dir_exists: true,
+          link_exists: false,
+          write_link: Some("Could not create link because this is a test".to_string())
+        };
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+        Ok(_) => panic!("Expected an Err but got Ok"),
+        Err(e) => assert_eq!("Could not create link because this is a test", e.to_string()),
+      }
+    }
 }
