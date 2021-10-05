@@ -106,7 +106,7 @@ impl <T> HopProgram<T>
 #[cfg(test)]
 mod tests {
     use crate::algebra::{std_io::StdIO, user_dirs::UserDirs, directories::Directories};
-    use crate::algebra::symlinks::{SymLinks, SymLink};
+    use crate::algebra::symlinks::{SymLinks, SymLink, SymLinkDeleteStatus};
     use crate::models::{HopEffect, LinkPair, Link};
     use super::HopProgram;
 
@@ -171,7 +171,7 @@ mod tests {
         Ok(self.link_exists)
       }
 
-      fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
+      fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<SymLinkDeleteStatus> {
         todo!()
       }
 
