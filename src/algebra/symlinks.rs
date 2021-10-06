@@ -3,11 +3,6 @@ use crate::models::{LinkPair, HopEffect};
 
 pub struct SymLink(pub PathBuf);
 
-pub enum SymLinkDeleteStatus {
-    Success(LinkPair),
-    Aborted(LinkPair),
-    NotFound(LinkPair)
-}
 
 impl AsRef<Path> for SymLink {
     fn as_ref(&self) -> &Path {
@@ -19,7 +14,7 @@ pub trait SymLinks {
 
     fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()>;
 
-    fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<SymLinkDeleteStatus>;
+    fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()>;
 
     fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>>;
 
