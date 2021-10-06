@@ -120,7 +120,14 @@ mod tests {
       read_dir_links: Result<Vec<LinkPair>, String>,
       dir_exists: bool,
       link_exists: bool,
-      write_link: Option<String>
+      write_link: Option<String>,
+      delete_link: SymLinkDeleteStatus
+    }
+
+    enum SymLinkDeleteStatus {
+      Succeeded,
+      Aborted,
+      NotFound
     }
 
     impl StdIO for Test<'_> {
@@ -191,7 +198,7 @@ mod tests {
         ];
 
       let output = Cell::new(vec![]);
-      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.list_links() {
         Ok(_) => assert_eq!(&vec!["myLink".to_string(), "myOtherLink".to_string()], &output.into_inner()),
@@ -203,7 +210,7 @@ mod tests {
     fn list_links_home_dir_failure() {
       let output = Cell::new(vec![]);
       let cfg_dir = ".blah".to_string();
-      let value = Test { out: &output, get_hop_home: Some("Failed to get home dir".to_string()), read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None };
+      let value = Test { out: &output, get_hop_home: Some("Failed to get home dir".to_string()), read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
 
       let mut program = HopProgram { value, cfg_dir };
 
@@ -217,7 +224,7 @@ mod tests {
     fn list_links_read_links_failure() {
       let output = Cell::new(vec![]);
       let cfg_dir = ".blah".to_string();
-      let value = Test { out: &output, get_hop_home: None, read_dir_links: Err("Failed to read links".to_string()), dir_exists: true, link_exists: false, write_link: None };
+      let value = Test { out: &output, get_hop_home: None, read_dir_links: Err("Failed to read links".to_string()), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
 
       let program = HopProgram { value, cfg_dir };
 
@@ -231,7 +238,7 @@ mod tests {
     fn list_links_read_links_no_result() {
       let output: Cell<Vec<String>> = Cell::new(vec![]);
       let cfg_dir = ".blah".to_string();
-      let value = Test { out: &output, get_hop_home: None, read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None };
+      let value = Test { out: &output, get_hop_home: None, read_dir_links: Ok(vec![]), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
 
       let program = HopProgram { value, cfg_dir };
 
@@ -253,7 +260,7 @@ mod tests {
           LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
         ];
 
-      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.jump_target(Link::new("myOtherLink")) {
         Ok(_) => assert_eq!(&vec!["/my/path/to/Otherlink".to_string()], &output.into_inner()),
@@ -270,7 +277,7 @@ mod tests {
           LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
         ];
 
-      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.jump_target(Link::new("bizarre")) {
         Ok(_) => assert_eq!(&vec!["Could not find link: bizarre".to_string()], &output.into_inner()),
@@ -283,7 +290,7 @@ mod tests {
       let output: Cell<Vec<String>> = Cell::new(vec![]);
       let read_links = vec![];
 
-      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None };
+      let test_val = Test { out: &output, get_hop_home: None, read_dir_links: Ok(read_links), dir_exists: true, link_exists: false, write_link: None, delete_link: SymLinkDeleteStatus::Succeeded };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.jump_target(Link::new("myLink")) {
         Ok(_) => assert_eq!(&vec!["Could not find link: myLink".to_string()], &output.into_inner()),
@@ -303,7 +310,8 @@ mod tests {
           read_dir_links: Ok(read_links),
           dir_exists: true,
           link_exists: false,
-          write_link: None
+          write_link: None,
+          delete_link: SymLinkDeleteStatus::Succeeded
         };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
@@ -324,7 +332,8 @@ mod tests {
           read_dir_links: Ok(read_links),
           dir_exists: false,
           link_exists: false,
-          write_link: None
+          write_link: None,
+          delete_link: SymLinkDeleteStatus::Succeeded
         };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
@@ -345,7 +354,8 @@ mod tests {
           read_dir_links: Ok(read_links),
           dir_exists: true,
           link_exists: true,
-          write_link: None
+          write_link: None,
+          delete_link: SymLinkDeleteStatus::Succeeded
         };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
@@ -366,7 +376,8 @@ mod tests {
           read_dir_links: Ok(read_links),
           dir_exists: true,
           link_exists: false,
-          write_link: Some("Could not create link because this is a test".to_string())
+          write_link: Some("Could not create link because this is a test".to_string()),
+          delete_link: SymLinkDeleteStatus::Succeeded
         };
       let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
       match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
