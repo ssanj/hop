@@ -166,8 +166,7 @@ mod tests {
 
     enum SymLinkDeleteStatus {
       Succeeded,
-      Failed,
-      NotFound
+      Failed
     }
 
     impl StdIO for Test<'_> {
@@ -222,8 +221,8 @@ mod tests {
 
       fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
         match &self.delete_link {
-          Succeeded => Ok(()),
-          Failed    => Err(io::Error::new(io::ErrorKind::Other, format!("Failed to delete: {}", &linkPair))),
+          SymLinkDeleteStatus::Succeeded => Ok(()),
+          SymLinkDeleteStatus::Failed    => Err(io::Error::new(io::ErrorKind::Other, format!("Failed to delete: {}", &linkPair))),
         }
       }
 
@@ -454,6 +453,95 @@ mod tests {
           assert_eq!(&Vec::<String>::new(), &input.into_inner());
         },
         Err(e) => panic!("Expected an Ok but got Err: {}", e)
+      }
+    }
+
+    #[test]
+    fn delete_link_aborted() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let input: Cell<Vec<String>> = Cell::new(vec!["N".to_string()]);
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
+
+      let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
+
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.delete_link(Link::new("myLink")) {
+        Ok(_) => {
+          let expected =
+            vec![
+              "Are you sure you want to delete myLink which links to /my/path/to/link ?".to_string(),
+              "Aborting delete of myLink".to_string()
+            ];
+
+          assert_eq!(&expected, &output.into_inner());
+          assert_eq!(&Vec::<String>::new(), &input.into_inner());
+        },
+        Err(e) => panic!("Expected an Ok but got Err: {}", e)
+      }
+    }
+
+    #[test]
+    fn delete_link_link_not_found() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let input: Cell<Vec<String>> = Cell::new(vec!["N".to_string()]);
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
+
+      let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
+
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.delete_link(Link::new("notALink")) {
+        Ok(_) => {
+          let expected =
+            vec![
+              "Could not find link named:`notALink` for deletion".to_string()
+            ];
+
+          assert_eq!(&expected, &output.into_inner());
+          assert_eq!(&vec!["N"], &input.into_inner());
+        },
+        Err(e) => panic!("Expected an Ok but got Err: {}", e)
+      }
+    }
+
+    #[test]
+    fn delete_link_failed() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let input: Cell<Vec<String>> = Cell::new(vec!["Y".to_string()]);
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
+
+      let test_val = {
+        let default = Test::with_read_links_and_std_in(&output, read_links, &input);
+        Test {
+          delete_link: SymLinkDeleteStatus::Failed,
+          ..default
+        }
+      };
+
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.delete_link(Link::new("myLink")) {
+        Ok(_) => panic!("Expected Err but got Ok"),
+        Err(e) => {
+          let expected =
+            vec![
+              "Are you sure you want to delete myLink which links to /my/path/to/link ?".to_string()
+            ];
+
+          assert_eq!("Failed to delete: myLink -> /my/path/to/link", e.to_string());
+          assert_eq!(&expected, &output.into_inner());
+          assert_eq!(&Vec::<String>::new(), &input.into_inner())
+        }
       }
     }
 }
