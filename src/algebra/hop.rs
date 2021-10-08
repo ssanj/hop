@@ -1,4 +1,6 @@
-use crate::{io_error, models::{HopEffect, LinkPair, Link}};
+use crate::{models::{HopEffect, LinkPair, Link}};
+use crate::program::io_error;
+
 
 use super::{std_io::StdIO, symlinks::SymLinks, symlinks::SymLink, user_dirs::UserDirs, directories::Directories};
 
