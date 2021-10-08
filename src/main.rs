@@ -52,17 +52,17 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     let program =
         if matches.is_present("list") {
-            handle_list(&hop_program)
+            program::handle_list(&hop_program)
         } else if let Some(jump_target) = matches.value_of("jump") {
-            handle_jump(&hop_program, jump_target)
+            program::handle_jump(&hop_program, jump_target)
         } else if let Some(m) = matches.values_of("mark") {
             let mut values = m.clone();
             let link = values.next().expect("expected link name");
             let target = values.next().expect("expected target value");
 
-            handle_mark(&hop_program, &LinkPair::new(link, target))
+            program::handle_mark(&hop_program, &LinkPair::new(link, target))
         } else if let Some(d) = matches.value_of("delete") {
-            handle_delete(&hop_program, &Link(d.to_string()))
+            program::handle_delete(&hop_program, &Link(d.to_string()))
         } else {
             let _result = app2.print_help();
             println!();
@@ -71,30 +71,35 @@ fn main() -> Result<(), Box<dyn Error>>{
     Ok(program)
 }
 
-fn handle_list(hop_program: &hop::HopProgram<Prod>) {
-    let action = hop_program.list_links();
-    on_error(action, "Could not retrieve list of links")
-}
+mod program {
 
-fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
-    let action = hop_program.jump_target(Link::new(jump_target));
-    on_error(action, &format!("Could not retrieve jump target: {}", jump_target))
-}
+    use super::*;
 
-fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
-    let action = hop_program.mark_dir(link_pair);
-    on_error(action, &format!("Could not mark directory: {}", link_pair))
-}
+    pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
+        let action = hop_program.list_links();
+        on_error(action, "Could not retrieve list of links")
+    }
 
-fn handle_delete(hop_program: &hop::HopProgram<Prod>, link: &Link) {
-    let action = hop_program.delete_link(link);
-    on_error(action, &format!("Could not delete link: {}", link))
-}
+    pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
+        let action = hop_program.jump_target(Link::new(jump_target));
+        on_error(action, &format!("Could not retrieve jump target: {}", jump_target))
+    }
 
-fn on_error<T>(effect: HopEffect<T>, message: &str) {
-    match effect {
-        Ok(_) => (),
-        Err(e) => eprintln!("{}\nError: {}", message, e)
+    pub fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
+        let action = hop_program.mark_dir(link_pair);
+        on_error(action, &format!("Could not mark directory: {}", link_pair))
+    }
+
+    pub fn handle_delete(hop_program: &hop::HopProgram<Prod>, link: &Link) {
+        let action = hop_program.delete_link(link);
+        on_error(action, &format!("Could not delete link: {}", link))
+    }
+
+    fn on_error<T>(effect: HopEffect<T>, message: &str) {
+        match effect {
+            Ok(_) => (),
+            Err(e) => eprintln!("{}\nError: {}", message, e)
+        }
     }
 }
 
