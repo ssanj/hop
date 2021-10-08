@@ -14,7 +14,7 @@ pub trait SymLinks {
 
     fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()>;
 
-    fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()>;
+    fn delete_link(&self, dir_path: &PathBuf, link_pair: &LinkPair) -> HopEffect<()>;
 
     fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>>;
 

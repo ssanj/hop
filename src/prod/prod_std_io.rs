@@ -7,10 +7,6 @@ impl StdIO for Prod {
         println!("{}", message)
     }
 
-    fn eprintln(&self, message: &str) {
-        eprintln!("{}", message)
-    }
-
     fn readln(&self) -> io::Result<String> {
         let mut buffer = String::new();
         io::stdin().read_line(&mut buffer)?;

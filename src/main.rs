@@ -1,13 +1,9 @@
 use std::error::Error;
-use std::path::PathBuf;
-use dirs::home_dir;
 use clap::{App, Arg};
-use models::{Link, LinkPair, LinkTarget};
+use models::{Link, LinkPair, HopEffect};
 use std::io;
 use algebra::hop;
 use prod::prod_models::Prod;
-
-use crate::models::HopEffect;
 
 mod models;
 mod algebra;
@@ -52,29 +48,19 @@ fn main() -> Result<(), Box<dyn Error>>{
      let mut app2 = app.clone(); //we need this close to display usage on error
      let matches = app.get_matches();
 
-    let mut hop_program = hop::HopProgram { value: Prod, cfg_dir: ".hop".to_string() };
+    let hop_program = hop::HopProgram { value: Prod, cfg_dir: ".hop".to_string() };
 
     let program =
         if matches.is_present("list") {
-            match hop_program.list_links() {
-                Ok(_) => (),
-                Err(e) => eprintln!("Could not retrieve list of links: {}", e)
-            }
+            on_error(hop_program.list_links(), "Could not retrieve list of links")
         } else if let Some(j) = matches.value_of("jump") {
-            match hop_program.jump_target(Link::new(j)) {
-                Ok(_) => (),
-                Err(e) => eprintln!("Could not retrieve jump target: {}", e)
-            }
+            on_error(hop_program.jump_target(Link::new(j)), "Could not retrieve jump target: {}")
         } else if let Some(m) = matches.values_of("mark") {
             let mut values = m.clone();
             let link = values.next().expect("expected link name");
             let target = values.next().expect("expected target value");
 
-            match hop_program.mark_dir(LinkPair::new(link, target)) {
-                Ok(_) => (),
-                Err(e) => eprintln!("Could not mark directory: {}", e)
-            }
-
+            on_error(hop_program.mark_dir(LinkPair::new(link, target)), "Could not mark directory: {}")
         } else if let Some(d) = matches.value_of("delete") {
             match hop_program.delete_link(Link(d.to_string())) {
                 Ok(_) => (),
@@ -88,6 +74,14 @@ fn main() -> Result<(), Box<dyn Error>>{
     Ok(program)
 }
 
+fn on_error<T>(effect: HopEffect<T>, message: &str) {
+    match effect {
+        Ok(_) => (),
+        Err(e) => eprintln!("{}\nError: {}", message, e)
+    }
+}
+
+//TODO: move this somewhere else
 fn io_error(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, message.clone())
 }

@@ -1,10 +1,8 @@
 use crate::models::HopEffect;
 use crate::algebra::directories::Directories;
 use super::prod_models::Prod;
-use dirs::home_dir;
 
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 impl Directories for Prod {
 

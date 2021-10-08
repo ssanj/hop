@@ -71,10 +71,6 @@ impl StdIO for Test<'_> {
     self.out.set(old_vec.to_vec())
   }
 
-  fn eprintln(&self, message: &str) {
-    todo!()
-  }
-
   fn readln(&self) -> HopEffect<String> {
     let old_vec = &mut self.input.take();
     let result = old_vec.remove(0);
@@ -84,46 +80,45 @@ impl StdIO for Test<'_> {
 }
 
 impl UserDirs for Test<'_> {
-  fn get_hop_home(&self, path: &str) -> HopEffect<PathBuf> {
+  fn get_hop_home(&self, _path: &str) -> HopEffect<PathBuf> {
     match &self.get_hop_home {
       Some(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
-      None =>  Ok(PathBuf::from("/xyz/.your-hop"))
+      None =>  Ok(PathBuf::from("/xyz/.your-hop")) //TODO: Do we want to pass this in?
     }
 
   }
 }
 
 impl SymLinks for Test<'_> {
-  fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
-
+  fn read_dir_links(&self, _dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
     match &self.read_dir_links {
       Ok(links) => Ok(links.to_vec()),
       Err(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string()))
     }
   }
 
-  fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()> {
+  fn write_link(&self, _symlink: &SymLink, _target: &PathBuf) -> HopEffect<()> {
     match &self.write_link {
       Some(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
       None => Ok(())
     }
   }
 
-  fn link_exists(&self, file_name: &PathBuf) -> HopEffect<bool> {
+  fn link_exists(&self, _file_name: &PathBuf) -> HopEffect<bool> {
     Ok(self.link_exists)
   }
 
-  fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
+  fn delete_link(&self, _dir_path: &PathBuf, link_pair: &LinkPair) -> HopEffect<()> {
     match &self.delete_link {
       SymLinkDeleteStatus::Succeeded => Ok(()),
-      SymLinkDeleteStatus::Failed    => Err(io::Error::new(io::ErrorKind::Other, format!("Failed to delete: {}", &linkPair))),
+      SymLinkDeleteStatus::Failed    => Err(io::Error::new(io::ErrorKind::Other, format!("Failed to delete: {}", &link_pair))),
     }
   }
 
 }
 
 impl Directories for Test<'_> {
-  fn dir_exists(&self, dir_path: &PathBuf) -> HopEffect<bool> {
+  fn dir_exists(&self, _dir_path: &PathBuf) -> HopEffect<bool> {
     Ok(self.dir_exists)
   }
 }
@@ -158,7 +153,7 @@ fn list_links_home_dir_failure() {
     }
   };
 
-  let mut program = HopProgram { value, cfg_dir };
+  let program = HopProgram { value, cfg_dir };
 
   match program.list_links() {
     Err(e) => assert_eq!(e.to_string(), "Failed to get home dir"),

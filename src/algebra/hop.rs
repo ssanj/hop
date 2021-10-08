@@ -1,8 +1,6 @@
 use crate::{io_error, models::{HopEffect, LinkPair, Link}};
 
 use super::{std_io::StdIO, symlinks::SymLinks, symlinks::SymLink, user_dirs::UserDirs, directories::Directories};
-use std::path::PathBuf;
-use std::fs;
 
 /// The data required to run hop
 pub struct HopProgram<T>{
@@ -73,8 +71,7 @@ impl <T> HopProgram<T>
 
          let yes_action = || {
              let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
-             let delete_result = self.value.delete_link(&hop_home, &pair)?;
-
+             self.value.delete_link(&hop_home, &pair)?;
              self.value.println(&format!("Removed link {} which pointed to {}", &link, &pair.target));
              Ok(())
          };

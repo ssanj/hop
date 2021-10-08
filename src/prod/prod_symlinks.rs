@@ -1,5 +1,4 @@
 use crate::models::{HopEffect, LinkPair, LinkTarget, Link};
-use crate::io_error;
 use super::prod_models::Prod;
 
 use crate::algebra::symlinks::{SymLinks, SymLink};
@@ -15,17 +14,16 @@ impl SymLinks for Prod {
         get_links(dir_path)
     }
 
-    fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()> {
-        nixfs::symlink(target, symlink)
+    fn write_link(&self, sym_link: &SymLink, target: &PathBuf) -> HopEffect<()> {
+        nixfs::symlink(target, sym_link)
     }
 
-    fn link_exists(&self, symLink: &PathBuf) -> HopEffect<bool> {
-        Ok(symLink.exists())
+    fn link_exists(&self, sym_link: &PathBuf) -> HopEffect<bool> {
+        Ok(sym_link.exists())
     }
 
-    fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
-        let link_pairs = get_links(&dir_path)?;
-        let file_path = (&dir_path.clone()).join(&linkPair.link);
+    fn delete_link(&self, dir_path: &PathBuf, link_pair: &LinkPair) -> HopEffect<()> {
+        let file_path = (&dir_path.clone()).join(&link_pair.link);
         fs::remove_file(file_path)?;
         Ok(())
     }
