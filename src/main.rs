@@ -52,26 +52,43 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     let program =
         if matches.is_present("list") {
-            on_error(hop_program.list_links(), "Could not retrieve list of links")
-        } else if let Some(j) = matches.value_of("jump") {
-            on_error(hop_program.jump_target(Link::new(j)), "Could not retrieve jump target: {}")
+            handle_list(&hop_program)
+        } else if let Some(jump_target) = matches.value_of("jump") {
+            handle_jump(&hop_program, jump_target)
         } else if let Some(m) = matches.values_of("mark") {
             let mut values = m.clone();
             let link = values.next().expect("expected link name");
             let target = values.next().expect("expected target value");
 
-            on_error(hop_program.mark_dir(LinkPair::new(link, target)), "Could not mark directory: {}")
+            handle_mark(&hop_program, &LinkPair::new(link, target))
         } else if let Some(d) = matches.value_of("delete") {
-            match hop_program.delete_link(Link(d.to_string())) {
-                Ok(_) => (),
-                Err(e) => eprintln!("Could not delete link: {}", e)
-            }
+            handle_delete(&hop_program, &Link(d.to_string()))
         } else {
             let _result = app2.print_help();
             println!();
         };
 
     Ok(program)
+}
+
+fn handle_list(hop_program: &hop::HopProgram<Prod>) {
+    let action = hop_program.list_links();
+    on_error(action, "Could not retrieve list of links")
+}
+
+fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
+    let action = hop_program.jump_target(Link::new(jump_target));
+    on_error(action, &format!("Could not retrieve jump target: {}", jump_target))
+}
+
+fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
+    let action = hop_program.mark_dir(link_pair);
+    on_error(action, &format!("Could not mark directory: {}", link_pair))
+}
+
+fn handle_delete(hop_program: &hop::HopProgram<Prod>, link: &Link) {
+    let action = hop_program.delete_link(link);
+    on_error(action, &format!("Could not delete link: {}", link))
 }
 
 fn on_error<T>(effect: HopEffect<T>, message: &str) {

@@ -252,7 +252,7 @@ fn mark_dir_success() {
   let test_val = Test::new(&output);
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+  match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
     Ok(_) => assert_eq!(&Vec::<String>::new(), &output.into_inner()),
     Err(e) => panic!("{}: Expected an Ok but got err", e)
   }
@@ -272,7 +272,7 @@ fn mark_dir_dir_does_not_exist() {
 
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+  match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
     Ok(_) => panic!("Expected an Err but got Ok"),
     Err(e) => assert_eq!("A directory named `/my/path/to/link` does not exist or you do not have permission to it.", e.to_string()),
   }
@@ -291,7 +291,7 @@ fn mark_dir_link_exists() {
   };
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+  match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
     Ok(_) => panic!("Expected an Err but got Ok"),
     Err(e) => assert_eq!("A link named `myLink` already exists. Aborting mark creation.", e.to_string()),
   }
@@ -311,7 +311,7 @@ fn mark_dir_write_link_failed() {
   };
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
+  match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
     Ok(_) => panic!("Expected an Err but got Ok"),
     Err(e) => assert_eq!("Could not create link because this is a test", e.to_string()),
   }
@@ -330,7 +330,7 @@ fn delete_link_success() {
   let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.delete_link(Link::new("myLink")) {
+  match program.delete_link(&Link::new("myLink")) {
     Ok(_) => {
       let expected =
         vec![
@@ -358,7 +358,7 @@ fn delete_link_aborted() {
   let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.delete_link(Link::new("myLink")) {
+  match program.delete_link(&Link::new("myLink")) {
     Ok(_) => {
       let expected =
         vec![
@@ -386,7 +386,7 @@ fn delete_link_link_not_found() {
   let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.delete_link(Link::new("notALink")) {
+  match program.delete_link(&Link::new("notALink")) {
     Ok(_) => {
       let expected =
         vec![
@@ -419,7 +419,7 @@ fn delete_link_failed() {
   };
 
   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-  match program.delete_link(Link::new("myLink")) {
+  match program.delete_link(&Link::new("myLink")) {
     Ok(_) => panic!("Expected Err but got Ok"),
     Err(e) => {
       let expected =

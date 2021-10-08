@@ -38,7 +38,7 @@ impl <T> HopProgram<T>
       Ok(entries.to_vec())
   }
 
-  pub fn mark_dir(&self, pair: LinkPair) -> HopEffect<()> {
+  pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<()> {
     let hop_home = self.value.get_hop_home(&self.cfg_dir)?;
     let symlink_path = (hop_home.clone()).join(&pair.link);
 
@@ -48,7 +48,7 @@ impl <T> HopProgram<T>
     if self.value.dir_exists(&target_path)? {
       //TODO: Send in a SymLink
       if self.value.link_exists(&symlink_path)? {
-        Err(io_error(&format!("A link named `{}` already exists. Aborting mark creation.", &pair.link)))
+        Err(io_error(&format!("A link named `{}` already exists. Aborting mark creation.", pair.link)))
       } else {
         self.value.write_link(&SymLink(symlink_path), &pair.target.to_path_buf())
       }
@@ -57,10 +57,10 @@ impl <T> HopProgram<T>
     }
   }
 
-  pub fn delete_link(&self, link: Link) -> HopEffect<()> {
+  pub fn delete_link(&self, link: &Link) -> HopEffect<()> {
     let link_pairs = self.get_link_pairs()?;
 
-    match link_pairs.iter().find(|lp| lp.link == link) {
+    match link_pairs.iter().find(|lp| &lp.link == link) {
      Some(pair) => {
          let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
 
@@ -72,7 +72,7 @@ impl <T> HopProgram<T>
          let yes_action = || {
              let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
              self.value.delete_link(&hop_home, &pair)?;
-             self.value.println(&format!("Removed link {} which pointed to {}", &link, &pair.target));
+             self.value.println(&format!("Removed link {} which pointed to {}", link, &pair.target));
              Ok(())
          };
 
