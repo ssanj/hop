@@ -59,7 +59,7 @@ impl <T> HopProgram<T>
     }
   }
 
-  pub fn delete(&self, link: Link) -> HopEffect<()> {
+  pub fn delete_link(&self, link: Link) -> HopEffect<()> {
     let link_pairs = self.get_link_pairs()?;
 
     match link_pairs.iter().find(|lp| lp.link == link) {
@@ -116,6 +116,7 @@ mod tests {
     //TODO: consider prefixing these fields, so as not to confuse them with the real implementation
     struct Test<'a> {
       out: &'a Cell<Vec<String>>,
+      input: &'a Cell<Vec<String>>,
       get_hop_home: Option<String>,
       read_dir_links: Result<Vec<LinkPair>, String>, //do we need to own this?
       dir_exists: bool,
@@ -128,6 +129,7 @@ mod tests {
       fn new(output: &'a Cell<Vec<String>>) -> Self {
         Test {
           out: &output,
+          input: &output, //make these equal, because we don't use input usually
           get_hop_home: None,
           read_dir_links: Ok(Vec::new()),
           dir_exists: true,
@@ -137,19 +139,34 @@ mod tests {
         }
       }
 
+      fn with_std_in(output: &'a Cell<Vec<String>>, input: &'a Cell<Vec<String>>) -> Self {
+        let default = Test::new(&output);
+        Test {
+          input: &input,
+          ..default
+        }
+      }
+
       fn with_read_links(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>) -> Self {
         let default = Test::new(&output);
         Test {
           read_dir_links: Ok(read_links),
           ..default
         }
+      }
 
+      fn with_read_links_and_std_in(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>, input: &'a Cell<Vec<String>>) -> Self {
+        let default = Test::with_std_in(&output, &input);
+        Test {
+          read_dir_links: Ok(read_links),
+          ..default
+        }
       }
     }
 
     enum SymLinkDeleteStatus {
       Succeeded,
-      Aborted,
+      Failed,
       NotFound
     }
 
@@ -166,7 +183,10 @@ mod tests {
       }
 
       fn readln(&self) -> HopEffect<String> {
-        todo!()
+        let old_vec = &mut self.input.take();
+        let result = old_vec.remove(0);
+        self.input.set(old_vec.to_vec());
+        Ok(result)
       }
     }
 
@@ -201,7 +221,10 @@ mod tests {
       }
 
       fn delete_link(&self, dir_path: &PathBuf, linkPair: &LinkPair) -> HopEffect<()> {
-        todo!()
+        match &self.delete_link {
+          Succeeded => Ok(()),
+          Failed    => Err(io::Error::new(io::ErrorKind::Other, format!("Failed to delete: {}", &linkPair))),
+        }
       }
 
     }
@@ -406,25 +429,31 @@ mod tests {
       }
     }
 
-    // #[test]
-    // fn delete_link_success() {
-    //   let output: Cell<Vec<String>> = Cell::new(vec![]);
-    //   let read_links = Vec::<LinkPair>::new();
+    #[test]
+    fn delete_link_success() {
+      let output: Cell<Vec<String>> = Cell::new(vec![]);
+      let input: Cell<Vec<String>> = Cell::new(vec!["Y".to_string()]);
+      let read_links =
+        vec![
+          LinkPair::new("myLink", "/my/path/to/link"),
+          LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+        ];
 
-    //   //Is there a more succinct, yet readable way to do this?
-    //   let test_val = {
-    //     let default = Test::new(&output);
-    //     Test {
-    //       write_link: Some("Could not create link because this is a test".to_string()),
-    //       link_exists: false,
-    //       ..default
-    //     }
-    //   };
+      let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
 
-    //   let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
-    //   match program.mark_dir(LinkPair::new("myLink", "/my/path/to/link")) {
-    //     Ok(_) => panic!("Expected an Err but got Ok"),
-    //     Err(e) => assert_eq!("Could not create link because this is a test", e.to_string()),
-    //   }
-    // }
+      let program = HopProgram { value: test_val, cfg_dir: ".hop".to_string() };
+      match program.delete_link(Link::new("myLink")) {
+        Ok(_) => {
+          let expected =
+            vec![
+              "Are you sure you want to delete myLink which links to /my/path/to/link ?".to_string(),
+              "Removed link myLink which pointed to /my/path/to/link".to_string()
+            ];
+
+          assert_eq!(&expected, &output.into_inner());
+          assert_eq!(&Vec::<String>::new(), &input.into_inner());
+        },
+        Err(e) => panic!("Expected an Ok but got Err: {}", e)
+      }
+    }
 }
