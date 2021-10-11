@@ -9,10 +9,21 @@ use std::path::{Path, PathBuf};
 
 //TODO: consider prefixing these fields, so as not to confuse them with the real implementation
 //TODO: Add enum instead of Options
+
+enum SymLinkDeleteStatus {
+    Succeeded,
+    Failed,
+}
+
+enum GetHopHomeStatus {
+    Succeeded(PathBuf), //Success with path
+    Failed(String), //Failure with error
+}
+
 struct Test<'a> {
     out: &'a Cell<Vec<String>>,
     input: &'a Cell<Vec<String>>,
-    get_hop_home: Option<String>,
+    get_hop_home: GetHopHomeStatus,
     read_dir_links: Result<Vec<LinkPair>, String>, //do we need to own this?
     dir_exists: bool,
     link_exists: bool,
@@ -25,7 +36,7 @@ impl<'a> Test<'a> {
         Test {
             out: output,
             input: output, //make these equal, because we don't use input usually
-            get_hop_home: None,
+            get_hop_home: GetHopHomeStatus::Succeeded(PathBuf::from("/xyz/.your-hop")),
             read_dir_links: Ok(Vec::new()),
             dir_exists: true,
             link_exists: false,
@@ -60,11 +71,6 @@ impl<'a> Test<'a> {
     }
 }
 
-enum SymLinkDeleteStatus {
-    Succeeded,
-    Failed,
-}
-
 impl StdIO for Test<'_> {
     fn println(&self, message: &str) {
         let old_vec = &mut self.out.take();
@@ -83,8 +89,8 @@ impl StdIO for Test<'_> {
 impl UserDirs for Test<'_> {
     fn get_hop_home(&self, _path: &str) -> HopEffect<PathBuf> {
         match &self.get_hop_home {
-            Some(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
-            None => Ok(PathBuf::from("/xyz/.your-hop")), //TODO: Do we want to pass this in?
+            GetHopHomeStatus::Succeeded(path) => Ok(PathBuf::from(path)),
+            GetHopHomeStatus::Failed(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
         }
     }
 }
@@ -155,7 +161,7 @@ fn list_links_home_dir_failure() {
     let value = {
         let default = Test::new(&output);
         Test {
-            get_hop_home: Some("Failed to get home dir".to_string()),
+            get_hop_home: GetHopHomeStatus::Failed("Failed to get home dir".to_string()),
             ..default
         }
     };
