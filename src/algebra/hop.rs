@@ -42,7 +42,7 @@ impl <T> HopProgram<T>
 
   pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<()> {
     let hop_home = self.value.get_hop_home(&self.cfg_dir)?;
-    let symlink_path = (hop_home.clone()).join(&pair.link);
+    let symlink_path = (hop_home).join(&pair.link);
 
     let target_path = pair.target.to_path_buf();
 
@@ -73,7 +73,7 @@ impl <T> HopProgram<T>
 
          let yes_action = || {
              let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
-             self.value.delete_link(&hop_home, &pair)?;
+             self.value.delete_link(hop_home, pair)?;
              self.value.println(&format!("Removed link {} which pointed to {}", link, &pair.target));
              Ok(())
          };
@@ -81,7 +81,10 @@ impl <T> HopProgram<T>
          self.prompt_user(&prompt_message, yes_action, no_action)
      },
 
-     None => Ok(self.value.println(&format!("Could not find link named:`{}` for deletion", link)))
+     None => {
+        self.value.println(&format!("Could not find link named:`{}` for deletion", link));
+        Ok(())
+     }
     }
   }
 
@@ -91,7 +94,7 @@ impl <T> HopProgram<T>
   {
       self.value.println(message);
       let buffer = self.value.readln()?;
-      let response = buffer.lines().next().ok_or(io_error("Could not retrieve lines from stdio"))?;
+      let response = buffer.lines().next().ok_or_else(||io_error("Could not retrieve lines from stdio"))?;
       match response {
           "Y" | "y"  => yes_action(),
           _ => no_action()

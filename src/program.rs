@@ -23,7 +23,7 @@ pub fn handle_delete(hop_program: &hop::HopProgram<Prod>, link: &Link) {
 }
 
 pub fn io_error(message: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, message.clone())
+    io::Error::new(io::ErrorKind::Other, message)
 }
 
 fn on_error<T>(effect: HopEffect<T>, message: &str) {

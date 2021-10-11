@@ -3,7 +3,7 @@ use crate::algebra::symlinks::{SymLinks, SymLink};
 use crate::models::{HopEffect, LinkPair, Link};
 use super::HopProgram;
 
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::io;
 use std::cell::Cell;
 
@@ -22,8 +22,8 @@ struct Test<'a> {
 impl <'a> Test<'a> {
   fn new(output: &'a Cell<Vec<String>>) -> Self {
     Test {
-      out: &output,
-      input: &output, //make these equal, because we don't use input usually
+      out: output,
+      input: output, //make these equal, because we don't use input usually
       get_hop_home: None,
       read_dir_links: Ok(Vec::new()),
       dir_exists: true,
@@ -34,15 +34,15 @@ impl <'a> Test<'a> {
   }
 
   fn with_std_in(output: &'a Cell<Vec<String>>, input: &'a Cell<Vec<String>>) -> Self {
-    let default = Test::new(&output);
+    let default = Test::new(output);
     Test {
-      input: &input,
+      input,
       ..default
     }
   }
 
   fn with_read_links(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>) -> Self {
-    let default = Test::new(&output);
+    let default = Test::new(output);
     Test {
       read_dir_links: Ok(read_links),
       ..default
@@ -50,7 +50,7 @@ impl <'a> Test<'a> {
   }
 
   fn with_read_links_and_std_in(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>, input: &'a Cell<Vec<String>>) -> Self {
-    let default = Test::with_std_in(&output, &input);
+    let default = Test::with_std_in(output, input);
     Test {
       read_dir_links: Ok(read_links),
       ..default
@@ -90,25 +90,25 @@ impl UserDirs for Test<'_> {
 }
 
 impl SymLinks for Test<'_> {
-  fn read_dir_links(&self, _dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
+  fn read_dir_links(&self, _dir_path: &Path) -> HopEffect<Vec<LinkPair>> {
     match &self.read_dir_links {
       Ok(links) => Ok(links.to_vec()),
       Err(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string()))
     }
   }
 
-  fn write_link(&self, _symlink: &SymLink, _target: &PathBuf) -> HopEffect<()> {
+  fn write_link(&self, _symlink: &SymLink, _target: &Path) -> HopEffect<()> {
     match &self.write_link {
       Some(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
       None => Ok(())
     }
   }
 
-  fn link_exists(&self, _file_name: &PathBuf) -> HopEffect<bool> {
+  fn link_exists(&self, _file_name: &Path) -> HopEffect<bool> {
     Ok(self.link_exists)
   }
 
-  fn delete_link(&self, _dir_path: &PathBuf, link_pair: &LinkPair) -> HopEffect<()> {
+  fn delete_link(&self, _dir_path: &Path, link_pair: &LinkPair) -> HopEffect<()> {
     match &self.delete_link {
       SymLinkDeleteStatus::Succeeded => Ok(()),
       SymLinkDeleteStatus::Failed    => Err(io::Error::new(io::ErrorKind::Other, format!("Failed to delete: {}", &link_pair))),
@@ -118,7 +118,7 @@ impl SymLinks for Test<'_> {
 }
 
 impl Directories for Test<'_> {
-  fn dir_exists(&self, _dir_path: &PathBuf) -> HopEffect<bool> {
+  fn dir_exists(&self, _dir_path: &Path) -> HopEffect<bool> {
     Ok(self.dir_exists)
   }
 }

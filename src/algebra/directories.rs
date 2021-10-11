@@ -1,7 +1,7 @@
 use crate::models::HopEffect;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub trait Directories {
 
-  fn dir_exists(&self, dir_path: &PathBuf) -> HopEffect<bool>;
+  fn dir_exists(&self, dir_path: &Path) -> HopEffect<bool>;
 }

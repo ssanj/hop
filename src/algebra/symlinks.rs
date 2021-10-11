@@ -12,11 +12,11 @@ impl AsRef<Path> for SymLink {
 
 pub trait SymLinks {
 
-    fn write_link(&self, symlink: &SymLink, target: &PathBuf) -> HopEffect<()>;
+    fn write_link(&self, symlink: &SymLink, target: &Path) -> HopEffect<()>;
 
-    fn delete_link(&self, dir_path: &PathBuf, link_pair: &LinkPair) -> HopEffect<()>;
+    fn delete_link(&self, dir_path: &Path, link_pair: &LinkPair) -> HopEffect<()>;
 
-    fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>>;
+    fn read_dir_links(&self, dir_path: &Path) -> HopEffect<Vec<LinkPair>>;
 
-    fn link_exists(&self, file_name: &PathBuf) -> HopEffect<bool>;
+    fn link_exists(&self, file_name: &Path) -> HopEffect<bool>;
 }

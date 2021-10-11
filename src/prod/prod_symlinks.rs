@@ -6,39 +6,39 @@ use crate::algebra::symlinks::{SymLinks, SymLink};
 use std::fs::{self, DirEntry};
 
 
-use std::path::PathBuf;
+use std::path::Path;
 use std::io;
 use std::os::unix::fs as nixfs;
 
 impl SymLinks for Prod {
-    fn read_dir_links(&self, dir_path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
+    fn read_dir_links(&self, dir_path: &Path) -> HopEffect<Vec<LinkPair>> {
         get_links(dir_path)
     }
 
-    fn write_link(&self, sym_link: &SymLink, target: &PathBuf) -> HopEffect<()> {
+    fn write_link(&self, sym_link: &SymLink, target: &Path) -> HopEffect<()> {
         nixfs::symlink(target, sym_link)
     }
 
-    fn link_exists(&self, sym_link: &PathBuf) -> HopEffect<bool> {
+    fn link_exists(&self, sym_link: &Path) -> HopEffect<bool> {
         Ok(sym_link.exists())
     }
 
-    fn delete_link(&self, dir_path: &PathBuf, link_pair: &LinkPair) -> HopEffect<()> {
-        let file_path = (&dir_path.clone()).join(&link_pair.link);
+    fn delete_link(&self, dir_path: &Path, link_pair: &LinkPair) -> HopEffect<()> {
+        let file_path = (dir_path).join(&link_pair.link);
         fs::remove_file(file_path)?;
         Ok(())
     }
 }
 
 //TODO: Refactor this
-fn get_links(path: &PathBuf) -> HopEffect<Vec<LinkPair>> {
+fn get_links(path: &Path) -> HopEffect<Vec<LinkPair>> {
     let dir_it = fs::read_dir(path)?;
     let symlinks =
         dir_it
             .filter(|res| {
                 res
                     .as_ref()
-                    .map_or_else(|_| false, |d| is_symlink(&d))
+                    .map_or_else(|_| false, |d| is_symlink(d))
             })
             .map(|res| res.and_then(|entry| create_link_pair(&entry)))
             .collect::<Result<Vec<_>, io::Error>>()?; //sequence
