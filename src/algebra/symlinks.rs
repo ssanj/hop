@@ -1,8 +1,7 @@
-use std::path::{PathBuf, Path};
-use crate::models::{LinkPair, HopEffect};
+use crate::models::{HopEffect, LinkPair};
+use std::path::{Path, PathBuf};
 
 pub struct SymLink(pub PathBuf);
-
 
 impl AsRef<Path> for SymLink {
     fn as_ref(&self) -> &Path {
@@ -11,7 +10,6 @@ impl AsRef<Path> for SymLink {
 }
 
 pub trait SymLinks {
-
     fn write_link(&self, symlink: &SymLink, target: &Path) -> HopEffect<()>;
 
     fn delete_link(&self, dir_path: &Path, link_pair: &LinkPair) -> HopEffect<()>;

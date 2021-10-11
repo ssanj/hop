@@ -1,6 +1,6 @@
 use std::fmt;
-use std::path::{Path, PathBuf};
 use std::io;
+use std::path::{Path, PathBuf};
 
 pub type HopEffect<T> = io::Result<T>;
 
@@ -16,9 +16,7 @@ impl Link {
 #[derive(Debug, Clone)]
 pub struct LinkTarget(pub String);
 
-
 impl LinkTarget {
-
     pub fn to_path_buf(&self) -> PathBuf {
         PathBuf::from(&self.0)
     }
@@ -27,16 +25,16 @@ impl LinkTarget {
 #[derive(Debug, Clone)]
 pub struct LinkPair {
     pub link: Link,
-    pub target: LinkTarget
+    pub target: LinkTarget,
 }
 
 impl LinkPair {
-  pub fn new(link: &str, target: &str) -> Self {
-    LinkPair {
-      link: Link(link.to_string()),
-      target: LinkTarget(target.to_string())
+    pub fn new(link: &str, target: &str) -> Self {
+        LinkPair {
+            link: Link(link.to_string()),
+            target: LinkTarget(target.to_string()),
+        }
     }
-  }
 }
 
 impl fmt::Display for Link {
@@ -45,16 +43,15 @@ impl fmt::Display for Link {
     }
 }
 
-
 impl AsRef<Path> for Link {
     fn as_ref(&self) -> &Path {
-      self.0.as_ref()
+        self.0.as_ref()
     }
 }
 
 impl AsRef<Path> for LinkTarget {
     fn as_ref(&self) -> &Path {
-      self.0.as_ref()
+        self.0.as_ref()
     }
 }
 

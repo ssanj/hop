@@ -1,106 +1,131 @@
-use crate::{models::{HopEffect, LinkPair, Link}};
+use crate::models::{HopEffect, Link, LinkPair};
 use crate::program::io_error;
 
-
-use super::{std_io::StdIO, symlinks::SymLinks, symlinks::SymLink, user_dirs::UserDirs, directories::Directories};
+use super::{
+    directories::Directories, std_io::StdIO, symlinks::SymLink, symlinks::SymLinks,
+    user_dirs::UserDirs,
+};
 
 /// The data required to run hop
-pub struct HopProgram<T>{
+pub struct HopProgram<T> {
     pub value: T,
-    pub cfg_dir: String
+    pub cfg_dir: String,
 }
 
-impl <T> HopProgram<T>
-  where
-    T : UserDirs + StdIO + SymLinks + Directories
-  {
-
-  pub fn list_links(&self) -> HopEffect<()> {
-    let entries = self.get_link_pairs()?;
-    entries.iter().for_each(|lp| self.value.println(&format!("{}", lp.link)));
-    Ok(())
-  }
-
-  pub fn jump_target(&self, link: Link) -> HopEffect<()> {
-    let entries = self.get_link_pairs()?;
-    let result = match entries.iter().find(|&lp| lp.link == link) {
-        Some(found_lp) => self.value.println(&format!("{}", found_lp.target)),
-        None => self.value.println(&format!("Could not find link: {}", link))
-    };
-
-    Ok(result)
-  }
-
-  //Ideally we just get this "capability", as it makes it easier to test
-  //This capability can depend on UserDirs + StdIO + SymLinks
-  fn get_link_pairs(&self) -> HopEffect<Vec<LinkPair>> {
-      let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
-      let entries = self.value.read_dir_links(&hop_home_dir)?;
-
-      Ok(entries.to_vec())
-  }
-
-  pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<()> {
-    let hop_home = self.value.get_hop_home(&self.cfg_dir)?;
-    let symlink_path = (hop_home).join(&pair.link);
-
-    let target_path = pair.target.to_path_buf();
-
-    //TODO: Send in a LinkTarget
-    if self.value.dir_exists(&target_path)? {
-      //TODO: Send in a SymLink
-      if self.value.link_exists(&symlink_path)? {
-        Err(io_error(&format!("A link named `{}` already exists. Aborting mark creation.", pair.link)))
-      } else {
-        self.value.write_link(&SymLink(symlink_path), &pair.target.to_path_buf())
-      }
-    } else {
-      Err(io_error(&format!("A directory named `{}` does not exist or you do not have permission to it.", &pair.target)))
+impl<T> HopProgram<T>
+where
+    T: UserDirs + StdIO + SymLinks + Directories,
+{
+    pub fn list_links(&self) -> HopEffect<()> {
+        let entries = self.get_link_pairs()?;
+        entries
+            .iter()
+            .for_each(|lp| self.value.println(&format!("{}", lp.link)));
+        Ok(())
     }
-  }
 
-  pub fn delete_link(&self, link: &Link) -> HopEffect<()> {
-    let link_pairs = self.get_link_pairs()?;
-
-    match link_pairs.iter().find(|lp| &lp.link == link) {
-     Some(pair) => {
-         let prompt_message = format!("Are you sure you want to delete {} which links to {} ?", pair.link, pair.target);
-
-         let no_action = || {
-          self.value.println(&format!("Aborting delete of {}", &pair.link));
-          Ok(())
+    pub fn jump_target(&self, link: Link) -> HopEffect<()> {
+        let entries = self.get_link_pairs()?;
+        let result = match entries.iter().find(|&lp| lp.link == link) {
+            Some(found_lp) => self.value.println(&format!("{}", found_lp.target)),
+            None => self
+                .value
+                .println(&format!("Could not find link: {}", link)),
         };
 
-         let yes_action = || {
-             let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
-             self.value.delete_link(hop_home, pair)?;
-             self.value.println(&format!("Removed link {} which pointed to {}", link, &pair.target));
-             Ok(())
-         };
-
-         self.prompt_user(&prompt_message, yes_action, no_action)
-     },
-
-     None => {
-        self.value.println(&format!("Could not find link named:`{}` for deletion", link));
-        Ok(())
-     }
+        Ok(result)
     }
-  }
 
-  fn prompt_user<Y, N, R>(&self, message: &str, yes_action: Y, no_action: N) -> HopEffect<R> where
-      Y: FnOnce() -> HopEffect<R>,
-      N: FnOnce() -> HopEffect<R>
-  {
-      self.value.println(message);
-      let buffer = self.value.readln()?;
-      let response = buffer.lines().next().ok_or_else(||io_error("Could not retrieve lines from stdio"))?;
-      match response {
-          "Y" | "y"  => yes_action(),
-          _ => no_action()
-      }
-  }
+    //Ideally we just get this "capability", as it makes it easier to test
+    //This capability can depend on UserDirs + StdIO + SymLinks
+    fn get_link_pairs(&self) -> HopEffect<Vec<LinkPair>> {
+        let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
+        let entries = self.value.read_dir_links(&hop_home_dir)?;
 
+        Ok(entries.to_vec())
+    }
+
+    pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<()> {
+        let hop_home = self.value.get_hop_home(&self.cfg_dir)?;
+        let symlink_path = (hop_home).join(&pair.link);
+
+        let target_path = pair.target.to_path_buf();
+
+        //TODO: Send in a LinkTarget
+        if self.value.dir_exists(&target_path)? {
+            //TODO: Send in a SymLink
+            if self.value.link_exists(&symlink_path)? {
+                Err(io_error(&format!(
+                    "A link named `{}` already exists. Aborting mark creation.",
+                    pair.link
+                )))
+            } else {
+                self.value
+                    .write_link(&SymLink(symlink_path), &pair.target.to_path_buf())
+            }
+        } else {
+            Err(io_error(&format!(
+                "A directory named `{}` does not exist or you do not have permission to it.",
+                &pair.target
+            )))
+        }
+    }
+
+    pub fn delete_link(&self, link: &Link) -> HopEffect<()> {
+        let link_pairs = self.get_link_pairs()?;
+
+        match link_pairs.iter().find(|lp| &lp.link == link) {
+            Some(pair) => {
+                let prompt_message = format!(
+                    "Are you sure you want to delete {} which links to {} ?",
+                    pair.link, pair.target
+                );
+
+                let no_action = || {
+                    self.value
+                        .println(&format!("Aborting delete of {}", &pair.link));
+                    Ok(())
+                };
+
+                let yes_action = || {
+                    let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
+                    self.value.delete_link(hop_home, pair)?;
+                    self.value.println(&format!(
+                        "Removed link {} which pointed to {}",
+                        link, &pair.target
+                    ));
+                    Ok(())
+                };
+
+                self.prompt_user(&prompt_message, yes_action, no_action)
+            }
+
+            None => {
+                self.value.println(&format!(
+                    "Could not find link named:`{}` for deletion",
+                    link
+                ));
+                Ok(())
+            }
+        }
+    }
+
+    fn prompt_user<Y, N, R>(&self, message: &str, yes_action: Y, no_action: N) -> HopEffect<R>
+    where
+        Y: FnOnce() -> HopEffect<R>,
+        N: FnOnce() -> HopEffect<R>,
+    {
+        self.value.println(message);
+        let buffer = self.value.readln()?;
+        let response = buffer
+            .lines()
+            .next()
+            .ok_or_else(|| io_error("Could not retrieve lines from stdio"))?;
+        match response {
+            "Y" | "y" => yes_action(),
+            _ => no_action(),
+        }
+    }
 }
 
 #[cfg(test)]

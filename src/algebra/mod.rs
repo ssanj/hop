@@ -1,5 +1,5 @@
-pub mod std_io;
-pub mod user_dirs;
-pub mod symlinks;
-pub mod hop;
 pub mod directories;
+pub mod hop;
+pub mod std_io;
+pub mod symlinks;
+pub mod user_dirs;

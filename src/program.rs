@@ -9,7 +9,10 @@ pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
 
 pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
     let action = hop_program.jump_target(Link::new(jump_target));
-    on_error(action, &format!("Could not retrieve jump target: {}", jump_target))
+    on_error(
+        action,
+        &format!("Could not retrieve jump target: {}", jump_target),
+    )
 }
 
 pub fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
@@ -29,6 +32,6 @@ pub fn io_error(message: &str) -> io::Error {
 fn on_error<T>(effect: HopEffect<T>, message: &str) {
     match effect {
         Ok(_) => (),
-        Err(e) => eprintln!("{}\nError: {}", message, e)
+        Err(e) => eprintln!("{}\nError: {}", message, e),
     }
 }
