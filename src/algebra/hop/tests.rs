@@ -15,9 +15,11 @@ enum SymLinkDeleteStatus {
     Failed,
 }
 
+type HomeStatusError = String;
+
 enum GetHopHomeStatus {
     Succeeded(PathBuf), //Success with path
-    Failed(String), //Failure with error
+    Failed(HomeStatusError), //Failure with error
 }
 
 struct Test<'a> {
