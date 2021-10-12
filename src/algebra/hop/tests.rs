@@ -7,9 +7,6 @@ use std::cell::Cell;
 use std::io;
 use std::path::{Path, PathBuf};
 
-//TODO: consider prefixing these fields, so as not to confuse them with the real implementation
-//TODO: Add enum instead of Options
-
 enum SymLinkDeleteStatus {
     Succeeded,
     Failed,
