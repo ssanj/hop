@@ -3,12 +3,13 @@ on:
   push:
     branches:
       - master
-  pull_request:
+      - testable
+
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    name: (${{ matrix.target }})
+    name: (${{ matrix.target }}-${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
