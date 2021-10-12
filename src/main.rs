@@ -20,6 +20,12 @@ fn main() {
                 .help("Lists hoppable directories"),
         )
         .arg(
+            Arg::with_name("table")
+                .short("t")
+                .long("table")
+                .help("tabulate hoppable directories"),
+        )
+        .arg(
             Arg::with_name("jump")
                 .short("j")
                 .long("jump")
@@ -54,6 +60,8 @@ fn main() {
 
     if matches.is_present("list") {
         program::handle_list(&hop_program)
+    } else if matches.is_present("table") {
+        program::handle_table(&hop_program)
     } else if let Some(jump_target) = matches.value_of("jump") {
         program::handle_jump(&hop_program, jump_target)
     } else if let Some(m) = matches.values_of("mark") {

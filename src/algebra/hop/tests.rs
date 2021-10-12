@@ -229,6 +229,31 @@ fn list_links_read_links_no_result() {
 }
 
 #[test]
+fn tabulate_links_success() {
+    let read_links = vec![
+        LinkPair::new("myLink", "/my/path/to/link"),
+        LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
+    ];
+
+    let output = Cell::new(vec![]);
+    let stub = TestStub::with_read_links(&output, read_links);
+
+    let test_val = Test { stub };
+
+    let program = HopProgram {
+        value: test_val,
+        cfg_dir: ".hop".to_string(),
+    };
+    match program.tabulate_links() {
+        Ok(_) => assert_eq!(
+            &vec!["myLink -> /my/path/to/link".to_string(), "myOtherLink -> /my/path/to/Otherlink".to_string()],
+            &output.into_inner()
+        ),
+        Err(e) => panic!("{}: Expected an Ok but got err", e),
+    }
+}
+
+#[test]
 fn jump_target_success() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
     let read_links = vec![

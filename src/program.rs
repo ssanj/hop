@@ -7,6 +7,11 @@ pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
     on_error(action, "Could not retrieve list of links")
 }
 
+pub fn handle_table(hop_program: &hop::HopProgram<Prod>) {
+    let action = hop_program.tabulate_links();
+    on_error(action, "Could not retrieve list of links")
+}
+
 pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
     let action = hop_program.jump_target(Link::new(jump_target));
     on_error(

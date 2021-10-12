@@ -24,6 +24,14 @@ where
         Ok(())
     }
 
+    pub fn tabulate_links(&self) -> HopEffect<()> {
+        let entries = self.get_link_pairs()?;
+        entries
+            .iter()
+            .for_each(|lp| self.value.println(&format!("{} -> {}", lp.link, lp.target)));
+        Ok(())
+    }
+
     pub fn jump_target(&self, link: Link) -> HopEffect<()> {
         let entries = self.get_link_pairs()?;
         let result = match entries.iter().find(|&lp| lp.link == link) {
