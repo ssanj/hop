@@ -78,10 +78,6 @@ impl <'a> TestStub<'a> {
     }
 }
 
-impl<'a> Test<'a> {
-
-}
-
 impl StdIO for Test<'_> {
     fn println(&self, message: &str) {
         let old_vec = &mut self.stub.out.take();
