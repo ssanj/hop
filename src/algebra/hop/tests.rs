@@ -15,7 +15,7 @@ enum SymLinkDeleteStatus {
 type HomeStatusError = String;
 
 enum GetHopHomeStatus {
-    Succeeded(PathBuf), //Success with path
+    Succeeded(PathBuf),      //Success with path
     Failed(HomeStatusError), //Failure with error
 }
 
@@ -23,7 +23,7 @@ struct TestStub<'a> {
     out: &'a Cell<Vec<String>>,
     input: &'a Cell<Vec<String>>,
     get_hop_home: GetHopHomeStatus,
-    read_dir_links: Result<Vec<LinkPair>, String>, //do we need to own this?
+    read_dir_links: Result<Vec<LinkPair>, String>,
     dir_exists: bool,
     link_exists: bool,
     write_link: Option<String>,
@@ -31,11 +31,10 @@ struct TestStub<'a> {
 }
 
 struct Test<'a> {
-    stub: TestStub<'a>
+    stub: TestStub<'a>,
 }
 
-impl <'a> TestStub<'a> {
-
+impl<'a> TestStub<'a> {
     fn new(output: &'a Cell<Vec<String>>) -> Self {
         Self {
             out: output,
@@ -94,7 +93,9 @@ impl UserDirs for Test<'_> {
     fn get_hop_home(&self, _path: &str) -> HopEffect<PathBuf> {
         match &self.stub.get_hop_home {
             GetHopHomeStatus::Succeeded(path) => Ok(PathBuf::from(path)),
-            GetHopHomeStatus::Failed(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
+            GetHopHomeStatus::Failed(error) => {
+                Err(io::Error::new(io::ErrorKind::Other, error.to_string()))
+            }
         }
     }
 }
@@ -145,7 +146,7 @@ fn list_links_success() {
     let output = Cell::new(vec![]);
     let stub = TestStub::with_read_links(&output, read_links);
 
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -171,9 +172,7 @@ fn list_links_home_dir_failure() {
             ..default
         };
 
-        Test {
-            stub,
-        }
+        Test { stub }
     };
 
     let program = HopProgram { value, cfg_dir };
@@ -196,9 +195,7 @@ fn list_links_read_links_failure() {
             ..default
         };
 
-        Test {
-            stub
-        }
+        Test { stub }
     };
 
     let program = HopProgram { value, cfg_dir };
@@ -214,7 +211,7 @@ fn list_links_read_links_no_result() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
     let cfg_dir = ".blah".to_string();
     let stub = TestStub::new(&output);
-    let value = Test { stub, };
+    let value = Test { stub };
 
     let program = HopProgram { value, cfg_dir };
 
@@ -240,7 +237,7 @@ fn jump_target_success() {
     ];
 
     let stub = TestStub::with_read_links(&output, read_links);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -264,7 +261,7 @@ fn jump_target_not_found() {
     ];
 
     let stub = TestStub::with_read_links(&output, read_links);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -284,7 +281,7 @@ fn jump_target_without_links() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     let stub = TestStub::new(&output);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -304,7 +301,7 @@ fn mark_dir_success() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     let stub = TestStub::new(&output);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -327,9 +324,7 @@ fn mark_dir_dir_does_not_exist() {
             ..default
         };
 
-        Test {
-            stub,
-        }
+        Test { stub }
     };
 
     let program = HopProgram {
@@ -353,9 +348,7 @@ fn mark_dir_link_exists() {
             ..default
         };
 
-        Test {
-            stub,
-        }
+        Test { stub }
     };
 
     let program = HopProgram {
@@ -383,9 +376,7 @@ fn mark_dir_write_link_failed() {
             ..default
         };
 
-        Test {
-            stub,
-        }
+        Test { stub }
     };
 
     let program = HopProgram {
@@ -411,7 +402,7 @@ fn delete_link_success() {
     ];
 
     let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -442,7 +433,7 @@ fn delete_link_aborted() {
     ];
 
     let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -473,7 +464,7 @@ fn delete_link_link_not_found() {
     ];
 
     let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-    let test_val = Test { stub, };
+    let test_val = Test { stub };
 
     let program = HopProgram {
         value: test_val,
@@ -506,9 +497,7 @@ fn delete_link_failed() {
             ..default
         };
 
-        Test {
-            stub,
-        }
+        Test { stub }
     };
 
     let program = HopProgram {
