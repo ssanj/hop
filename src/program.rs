@@ -1,6 +1,7 @@
 use super::*;
 
 use std::io;
+use ansi_term::Color::{Red, Yellow};
 
 pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
     let action = hop_program.list_links();
@@ -37,6 +38,9 @@ pub fn io_error(message: &str) -> io::Error {
 fn on_error<T>(effect: HopEffect<T>, message: &str) {
     match effect {
         Ok(_) => (),
-        Err(e) => eprintln!("{}\nError: {}", message, e),
+        Err(e) => {
+            println!("{}",Yellow.paint(format!("{}", message)));
+            eprintln!("{}",Red.paint(format!("Error: {}", e)))
+        }
     }
 }
