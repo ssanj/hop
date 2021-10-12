@@ -79,23 +79,7 @@ impl <'a> TestStub<'a> {
 }
 
 impl<'a> Test<'a> {
-    fn new(output: &'a Cell<Vec<String>>) -> Self {
-        Test {
-            stub: TestStub::new(output)
-        }
-    }
 
-
-    fn with_read_links_and_std_in(
-        output: &'a Cell<Vec<String>>,
-        read_links: Vec<LinkPair>,
-        input: &'a Cell<Vec<String>>,
-    ) -> Self {
-        let stub = TestStub::with_read_links_and_std_in(output, read_links, input);
-        Test {
-            stub,
-        }
-    }
 }
 
 impl StdIO for Test<'_> {
@@ -236,7 +220,8 @@ fn list_links_read_links_failure() {
 fn list_links_read_links_no_result() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
     let cfg_dir = ".blah".to_string();
-    let value = Test::new(&output);
+    let stub = TestStub::new(&output);
+    let value = Test { stub, };
 
     let program = HopProgram { value, cfg_dir };
 
@@ -305,7 +290,9 @@ fn jump_target_not_found() {
 fn jump_target_without_links() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
-    let test_val = Test::new(&output);
+    let stub = TestStub::new(&output);
+    let test_val = Test { stub, };
+
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
@@ -323,7 +310,8 @@ fn jump_target_without_links() {
 fn mark_dir_success() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
-    let test_val = Test::new(&output);
+    let stub = TestStub::new(&output);
+    let test_val = Test { stub, };
 
     let program = HopProgram {
         value: test_val,
@@ -429,7 +417,8 @@ fn delete_link_success() {
         LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
     ];
 
-    let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
+    let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
+    let test_val = Test { stub, };
 
     let program = HopProgram {
         value: test_val,
@@ -459,7 +448,8 @@ fn delete_link_aborted() {
         LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
     ];
 
-    let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
+    let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
+    let test_val = Test { stub, };
 
     let program = HopProgram {
         value: test_val,
@@ -489,7 +479,8 @@ fn delete_link_link_not_found() {
         LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
     ];
 
-    let test_val = Test::with_read_links_and_std_in(&output, read_links, &input);
+    let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
+    let test_val = Test { stub, };
 
     let program = HopProgram {
         value: test_val,
