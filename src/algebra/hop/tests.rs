@@ -85,12 +85,6 @@ impl<'a> Test<'a> {
         }
     }
 
-    fn with_read_links(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>) -> Self {
-        let stub = TestStub::with_read_links(output, read_links);
-        Test {
-            stub,
-        }
-    }
 
     fn with_read_links_and_std_in(
         output: &'a Cell<Vec<String>>,
@@ -172,7 +166,9 @@ fn list_links_success() {
     ];
 
     let output = Cell::new(vec![]);
-    let test_val = Test::with_read_links(&output, read_links);
+    let stub = TestStub::with_read_links(&output, read_links);
+
+    let test_val = Test { stub, };
 
     let program = HopProgram {
         value: test_val,
@@ -265,7 +261,9 @@ fn jump_target_success() {
         LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
     ];
 
-    let test_val = Test::with_read_links(&output, read_links);
+    let stub = TestStub::with_read_links(&output, read_links);
+    let test_val = Test { stub, };
+
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
@@ -287,7 +285,9 @@ fn jump_target_not_found() {
         LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
     ];
 
-    let test_val = Test::with_read_links(&output, read_links);
+    let stub = TestStub::with_read_links(&output, read_links);
+    let test_val = Test { stub, };
+
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
