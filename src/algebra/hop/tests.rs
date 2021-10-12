@@ -22,7 +22,7 @@ enum GetHopHomeStatus {
     Failed(HomeStatusError), //Failure with error
 }
 
-struct Test<'a> {
+struct TestStub<'a> {
     out: &'a Cell<Vec<String>>,
     input: &'a Cell<Vec<String>>,
     get_hop_home: GetHopHomeStatus,
@@ -33,9 +33,14 @@ struct Test<'a> {
     delete_link: SymLinkDeleteStatus,
 }
 
-impl<'a> Test<'a> {
+struct Test<'a> {
+    stub: TestStub<'a>
+}
+
+impl <'a> TestStub<'a> {
+
     fn new(output: &'a Cell<Vec<String>>) -> Self {
-        Test {
+        Self {
             out: output,
             input: output, //make these equal, because we don't use input usually
             get_hop_home: GetHopHomeStatus::Succeeded(PathBuf::from("/xyz/.your-hop")),
@@ -48,13 +53,13 @@ impl<'a> Test<'a> {
     }
 
     fn with_std_in(output: &'a Cell<Vec<String>>, input: &'a Cell<Vec<String>>) -> Self {
-        let default = Test::new(output);
-        Test { input, ..default }
+        let default = TestStub::new(output);
+        TestStub { input, ..default }
     }
 
     fn with_read_links(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>) -> Self {
-        let default = Test::new(output);
-        Test {
+        let default = TestStub::new(output);
+        TestStub {
             read_dir_links: Ok(read_links),
             ..default
         }
@@ -65,32 +70,58 @@ impl<'a> Test<'a> {
         read_links: Vec<LinkPair>,
         input: &'a Cell<Vec<String>>,
     ) -> Self {
-        let default = Test::with_std_in(output, input);
-        Test {
+        let default = TestStub::with_std_in(output, input);
+        TestStub {
             read_dir_links: Ok(read_links),
             ..default
         }
     }
 }
 
+impl<'a> Test<'a> {
+    fn new(output: &'a Cell<Vec<String>>) -> Self {
+        Test {
+            stub: TestStub::new(output)
+        }
+    }
+
+    fn with_read_links(output: &'a Cell<Vec<String>>, read_links: Vec<LinkPair>) -> Self {
+        let stub = TestStub::with_read_links(output, read_links);
+        Test {
+            stub,
+        }
+    }
+
+    fn with_read_links_and_std_in(
+        output: &'a Cell<Vec<String>>,
+        read_links: Vec<LinkPair>,
+        input: &'a Cell<Vec<String>>,
+    ) -> Self {
+        let stub = TestStub::with_read_links_and_std_in(output, read_links, input);
+        Test {
+            stub,
+        }
+    }
+}
+
 impl StdIO for Test<'_> {
     fn println(&self, message: &str) {
-        let old_vec = &mut self.out.take();
+        let old_vec = &mut self.stub.out.take();
         old_vec.push(message.to_string());
-        self.out.set(old_vec.to_vec())
+        self.stub.out.set(old_vec.to_vec())
     }
 
     fn readln(&self) -> HopEffect<String> {
-        let old_vec = &mut self.input.take();
+        let old_vec = &mut self.stub.input.take();
         let result = old_vec.remove(0);
-        self.input.set(old_vec.to_vec());
+        self.stub.input.set(old_vec.to_vec());
         Ok(result)
     }
 }
 
 impl UserDirs for Test<'_> {
     fn get_hop_home(&self, _path: &str) -> HopEffect<PathBuf> {
-        match &self.get_hop_home {
+        match &self.stub.get_hop_home {
             GetHopHomeStatus::Succeeded(path) => Ok(PathBuf::from(path)),
             GetHopHomeStatus::Failed(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
         }
@@ -99,25 +130,25 @@ impl UserDirs for Test<'_> {
 
 impl SymLinks for Test<'_> {
     fn read_dir_links(&self, _dir_path: &Path) -> HopEffect<Vec<LinkPair>> {
-        match &self.read_dir_links {
+        match &self.stub.read_dir_links {
             Ok(links) => Ok(links.to_vec()),
             Err(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
         }
     }
 
     fn write_link(&self, _symlink: &SymLink, _target: &Path) -> HopEffect<()> {
-        match &self.write_link {
+        match &self.stub.write_link {
             Some(error) => Err(io::Error::new(io::ErrorKind::Other, error.to_string())),
             None => Ok(()),
         }
     }
 
     fn link_exists(&self, _file_name: &Path) -> HopEffect<bool> {
-        Ok(self.link_exists)
+        Ok(self.stub.link_exists)
     }
 
     fn delete_link(&self, _dir_path: &Path, link_pair: &LinkPair) -> HopEffect<()> {
-        match &self.delete_link {
+        match &self.stub.delete_link {
             SymLinkDeleteStatus::Succeeded => Ok(()),
             SymLinkDeleteStatus::Failed => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -129,7 +160,7 @@ impl SymLinks for Test<'_> {
 
 impl Directories for Test<'_> {
     fn dir_exists(&self, _dir_path: &Path) -> HopEffect<bool> {
-        Ok(self.dir_exists)
+        Ok(self.stub.dir_exists)
     }
 }
 
@@ -161,10 +192,14 @@ fn list_links_home_dir_failure() {
     let output = Cell::new(vec![]);
     let cfg_dir = ".blah".to_string();
     let value = {
-        let default = Test::new(&output);
-        Test {
+        let default = TestStub::new(&output);
+        let stub = TestStub {
             get_hop_home: GetHopHomeStatus::Failed("Failed to get home dir".to_string()),
             ..default
+        };
+
+        Test {
+            stub,
         }
     };
 
@@ -182,10 +217,14 @@ fn list_links_read_links_failure() {
     let cfg_dir = ".blah".to_string();
 
     let value = {
-        let default = Test::new(&output);
-        Test {
+        let default = TestStub::new(&output);
+        let stub = TestStub {
             read_dir_links: Err("Failed to read links".to_string()),
             ..default
+        };
+
+        Test {
+            stub
         }
     };
 
@@ -301,10 +340,14 @@ fn mark_dir_dir_does_not_exist() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     let test_val = {
-        let default = Test::new(&output);
-        Test {
+        let default = TestStub::new(&output);
+        let stub = TestStub {
             dir_exists: false,
             ..default
+        };
+
+        Test {
+            stub,
         }
     };
 
@@ -323,10 +366,14 @@ fn mark_dir_link_exists() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     let test_val = {
-        let default = Test::new(&output);
-        Test {
+        let default = TestStub::new(&output);
+        let stub = TestStub {
             link_exists: true,
             ..default
+        };
+
+        Test {
+            stub,
         }
     };
 
@@ -349,10 +396,14 @@ fn mark_dir_write_link_failed() {
 
     //Is there a more succinct, yet readable way to do this?
     let test_val = {
-        let default = Test::new(&output);
-        Test {
+        let default = TestStub::new(&output);
+        let stub = TestStub {
             write_link: Some("Could not create link because this is a test".to_string()),
             ..default
+        };
+
+        Test {
+            stub,
         }
     };
 
@@ -465,10 +516,14 @@ fn delete_link_failed() {
     ];
 
     let test_val = {
-        let default = Test::with_read_links_and_std_in(&output, read_links, &input);
-        Test {
+        let default = TestStub::with_read_links_and_std_in(&output, read_links, &input);
+        let stub = TestStub {
             delete_link: SymLinkDeleteStatus::Failed,
             ..default
+        };
+
+        Test {
+            stub,
         }
     };
 
