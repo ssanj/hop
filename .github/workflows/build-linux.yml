@@ -1,20 +1,20 @@
-name: mac
+name: linux
 on:
   push:
     branches:
       - master
-      - testable
+  pull_request:
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    name: (${{ matrix.target }}-${{ matrix.os }})
+    name: (${{ matrix.target }})
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-10.15, macos-11]
+        os: [ubuntu-latest]
         target: [
-          x86_64-apple-darwin,
+          x86_64-unknown-linux-gnu,
         ]
 
     steps:
