@@ -35,13 +35,11 @@ where
     pub fn jump_target(&self, link: Link) -> HopEffect<()> {
         let entries = self.get_link_pairs()?;
         let result = match entries.iter().find(|&lp| lp.link == link) {
-            Some(found_lp) => self.value.println(&format!("{}", found_lp.target)),
-            None => self
-                .value
-                .println(&format!("Could not find link: {}", link)),
+            Some(found_lp) => Ok(self.value.println(&format!("{}", found_lp.target))),
+            None => Err(io_error(&format!("Could not find link: {}", link))),
         };
 
-        Ok(result)
+        result
     }
 
     //Ideally we just get this "capability", as it makes it easier to test

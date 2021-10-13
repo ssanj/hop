@@ -293,11 +293,8 @@ fn jump_target_not_found() {
         cfg_dir: ".hop".to_string(),
     };
     match program.jump_target(Link::new("bizarre")) {
-        Ok(_) => assert_eq!(
-            &vec!["Could not find link: bizarre".to_string()],
-            &output.into_inner()
-        ),
-        Err(e) => panic!("{}: Expected an Ok but got err", e),
+        Ok(_) => panic!("{}: Expected an Err but got Ok"),
+        Err(e) => assert_eq!(e.to_string(), "Could not find link: bizarre".to_string()),
     }
 }
 
@@ -313,11 +310,8 @@ fn jump_target_without_links() {
         cfg_dir: ".hop".to_string(),
     };
     match program.jump_target(Link::new("myLink")) {
-        Ok(_) => assert_eq!(
-            &vec!["Could not find link: myLink".to_string()],
-            &output.into_inner()
-        ),
-        Err(e) => panic!("{}: Expected an Ok but got err", e),
+        Ok(_) => panic!("Expected Err but got Ok"),
+        Err(e) => assert_eq!(e.to_string(), "Could not find link: myLink".to_string()),
     }
 }
 
