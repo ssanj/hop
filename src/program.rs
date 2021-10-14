@@ -10,7 +10,13 @@ pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
 
 pub fn handle_table(hop_program: &hop::HopProgram<Prod>) {
     let action = hop_program.tabulate_links();
-    on_error(action, "Could not retrieve list of links")
+    match action {
+        Ok(entries) =>
+            entries
+            .iter()
+            .for_each(|lp| println!("{} {} {}", lp.link, Yellow.paint("->") ,lp.target)),
+        Err(e) => handle_error(e, "Could not retrieve list of links"),
+    }
 }
 
 pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
@@ -43,4 +49,9 @@ fn on_error<T>(effect: HopEffect<T>, message: &str) {
             eprintln!("{}",Red.paint(format!("Error: {}", e)))
         }
     }
+}
+
+fn handle_error(error: io::Error, message: &str) {
+    println!("{}",Yellow.paint(format!("{}", message)));
+    eprintln!("{}",Red.paint(format!("Error: {}", error)))
 }

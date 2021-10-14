@@ -13,7 +13,7 @@ impl Link {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LinkTarget(pub String);
 
 impl LinkTarget {
@@ -22,7 +22,7 @@ impl LinkTarget {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LinkPair {
     pub link: Link,
     pub target: LinkTarget,

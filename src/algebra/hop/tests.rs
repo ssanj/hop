@@ -245,10 +245,14 @@ fn tabulate_links_success() {
         cfg_dir: ".hop".to_string(),
     };
     match program.tabulate_links() {
-        Ok(_) => assert_eq!(
-            &vec!["myLink -> /my/path/to/link".to_string(), "myOtherLink -> /my/path/to/Otherlink".to_string()],
-            &output.into_inner()
-        ),
+        Ok(entries) => {
+            assert_eq!(
+                &vec![
+                    LinkPair::new("myLink", "/my/path/to/link"),
+                    LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+                ], &entries);
+            assert_eq!(&Vec::<String>::new(), &output.into_inner())
+        },
         Err(e) => panic!("{}: Expected an Ok but got err", e),
     }
 }
