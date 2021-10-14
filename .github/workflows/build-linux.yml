@@ -2,9 +2,7 @@ name: linux
 on:
   push:
     branches:
-      - master
-      - testable
-
+      - main
 
 jobs:
   test:

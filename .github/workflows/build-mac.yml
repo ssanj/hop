@@ -2,8 +2,7 @@ name: mac
 on:
   push:
     branches:
-      - master
-      - testable
+      - main
 
 jobs:
   test:
