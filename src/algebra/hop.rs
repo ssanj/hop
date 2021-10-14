@@ -34,8 +34,6 @@ where
         result
     }
 
-    //Ideally we just get this "capability", as it makes it easier to test
-    //This capability can depend on UserDirs + StdIO + SymLinks
     fn get_link_pairs(&self) -> HopEffect<Vec<LinkPair>> {
         let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
         let entries = self.value.read_dir_links(&hop_home_dir)?;
