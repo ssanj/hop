@@ -163,7 +163,7 @@ fn list_links_success() {
                 ],
                 &entries
             )
-        },
+        }
         Err(e) => panic!("{}: Expected an Ok but got err", e),
     }
 }
@@ -257,9 +257,11 @@ fn tabulate_links_success() {
                 &vec![
                     LinkPair::new("myLink", "/my/path/to/link"),
                     LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
-                ], &entries);
+                ],
+                &entries
+            );
             assert_eq!(&Vec::<String>::new(), &output.into_inner())
-        },
+        }
         Err(e) => panic!("{}: Expected an Ok but got err", e),
     }
 }
@@ -282,11 +284,8 @@ fn jump_target_success() {
     match program.jump_target(Link::new("myOtherLink")) {
         Ok(link) => {
             assert_eq!(link, "/my/path/to/Otherlink".to_string());
-            assert_eq!(
-                &Vec::<String>::new(),
-                &output.into_inner()
-            )
-        },
+            assert_eq!(&Vec::<String>::new(), &output.into_inner())
+        }
         Err(e) => panic!("{}: Expected an Ok but got err", e),
     }
 }
@@ -445,11 +444,14 @@ fn delete_link_success() {
         Ok(result) => {
             let expected = vec![
                 "Are you sure you want to delete myLink which links to /my/path/to/link ?"
-                    .to_string()
+                    .to_string(),
             ];
 
             assert_eq!(&expected, &output.into_inner());
-            assert_eq!(result, DeleteStatus::DeleteSucceeded(LinkPair::new("myLink", "/my/path/to/link")));
+            assert_eq!(
+                result,
+                DeleteStatus::DeleteSucceeded(LinkPair::new("myLink", "/my/path/to/link"))
+            );
             assert_eq!(&Vec::<String>::new(), &input.into_inner());
         }
         Err(e) => panic!("Expected an Ok but got Err: {}", e),
@@ -476,7 +478,7 @@ fn delete_link_aborted() {
         Ok(result) => {
             let expected = vec![
                 "Are you sure you want to delete myLink which links to /my/path/to/link ?"
-                    .to_string()
+                    .to_string(),
             ];
 
             assert_eq!(&expected, &output.into_inner());
@@ -507,10 +509,12 @@ fn delete_link_link_not_found() {
         Ok(_) => panic!("Expected an Err but got Ok"),
         Err(e) => {
             assert_eq!(&Vec::<String>::new(), &output.into_inner());
-            assert_eq!("Could not find link named:`notALink` for deletion".to_string(), e.to_string());
+            assert_eq!(
+                "Could not find link named:`notALink` for deletion".to_string(),
+                e.to_string()
+            );
             assert_eq!(&vec!["N"], &input.into_inner());
         }
-
     }
 }
 

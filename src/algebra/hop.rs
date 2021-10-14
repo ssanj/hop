@@ -15,9 +15,8 @@ pub struct HopProgram<T> {
 #[derive(Debug, PartialEq)]
 pub enum DeleteStatus {
     DeleteAborted,
-    DeleteSucceeded(LinkPair)
+    DeleteSucceeded(LinkPair),
 }
-
 
 impl<T> HopProgram<T>
 where
@@ -82,9 +81,7 @@ where
                     pair.link, pair.target
                 );
 
-                let no_action = || {
-                    Ok(DeleteStatus::DeleteAborted)
-                };
+                let no_action = || Ok(DeleteStatus::DeleteAborted);
 
                 let yes_action = || {
                     let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
@@ -96,12 +93,10 @@ where
                 self.prompt_user(&prompt_message, yes_action, no_action)
             }
 
-            None => {
-                Err(io_error(&format!(
-                    "Could not find link named:`{}` for deletion",
-                    link
-                )))
-            }
+            None => Err(io_error(&format!(
+                "Could not find link named:`{}` for deletion",
+                link
+            ))),
         }
     }
 
