@@ -279,10 +279,13 @@ fn jump_target_success() {
         cfg_dir: ".hop".to_string(),
     };
     match program.jump_target(Link::new("myOtherLink")) {
-        Ok(_) => assert_eq!(
-            &vec!["/my/path/to/Otherlink".to_string()],
-            &output.into_inner()
-        ),
+        Ok(link) => {
+            assert_eq!(link, "/my/path/to/Otherlink".to_string());
+            assert_eq!(
+                &Vec::<String>::new(),
+                &output.into_inner()
+            )
+        },
         Err(e) => panic!("{}: Expected an Ok but got err", e),
     }
 }

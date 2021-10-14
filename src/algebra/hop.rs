@@ -24,14 +24,12 @@ where
         self.get_link_pairs()
     }
 
-    pub fn jump_target(&self, link: Link) -> HopEffect<()> {
+    pub fn jump_target(&self, link: Link) -> HopEffect<String> {
         let entries = self.get_link_pairs()?;
-        let result = match entries.iter().find(|&lp| lp.link == link) {
-            Some(found_lp) => Ok(self.value.println(&format!("{}", found_lp.target))),
+        match entries.iter().find(|&lp| lp.link == link) {
+            Some(found_lp) => Ok(format!("{}", found_lp.target)),
             None => Err(io_error(&format!("Could not find link: {}", link))),
-        };
-
-        result
+        }
     }
 
     fn get_link_pairs(&self) -> HopEffect<Vec<LinkPair>> {

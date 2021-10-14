@@ -28,10 +28,10 @@ pub fn handle_table(hop_program: &hop::HopProgram<Prod>) {
 
 pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
     let action = hop_program.jump_target(Link::new(jump_target));
-    handle_action(
-        action,
-        &format!("Could not retrieve jump target: {}", jump_target),
-    )
+    match action {
+        Ok(link) => println!("{}", link),
+        Err(e) => handle_error(e, &format!("Could not retrieve jump target: {}", jump_target)),
+    }
 }
 
 pub fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
