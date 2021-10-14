@@ -107,11 +107,10 @@ where
             }
 
             None => {
-                self.value.println(&format!(
+                Err(io_error(&format!(
                     "Could not find link named:`{}` for deletion",
                     link
-                ));
-                Ok(())
+                )))
             }
         }
     }

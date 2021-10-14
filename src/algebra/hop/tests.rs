@@ -293,7 +293,7 @@ fn jump_target_not_found() {
         cfg_dir: ".hop".to_string(),
     };
     match program.jump_target(Link::new("bizarre")) {
-        Ok(_) => panic!("{}: Expected an Err but got Ok"),
+        Ok(_) => panic!("Expected an Err but got Ok"),
         Err(e) => assert_eq!(e.to_string(), "Could not find link: bizarre".to_string()),
     }
 }
@@ -490,13 +490,13 @@ fn delete_link_link_not_found() {
         cfg_dir: ".hop".to_string(),
     };
     match program.delete_link(&Link::new("notALink")) {
-        Ok(_) => {
-            let expected = vec!["Could not find link named:`notALink` for deletion".to_string()];
-
-            assert_eq!(&expected, &output.into_inner());
+        Ok(_) => panic!("Expected an Err but got Ok"),
+        Err(e) => {
+            assert_eq!(&Vec::<String>::new(), &output.into_inner());
+            assert_eq!("Could not find link named:`notALink` for deletion".to_string(), e.to_string());
             assert_eq!(&vec!["N"], &input.into_inner());
         }
-        Err(e) => panic!("Expected an Ok but got Err: {}", e),
+
     }
 }
 
