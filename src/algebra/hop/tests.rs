@@ -153,10 +153,16 @@ fn list_links_success() {
         cfg_dir: ".hop".to_string(),
     };
     match program.list_links() {
-        Ok(_) => assert_eq!(
-            &vec!["myLink".to_string(), "myOtherLink".to_string()],
-            &output.into_inner()
-        ),
+        Ok(entries) => {
+            assert_eq!(&Vec::<String>::new(), &output.into_inner());
+            assert_eq!(
+                &vec![
+                    LinkPair::new("myLink", "/my/path/to/link"),
+                    LinkPair::new("myOtherLink", "/my/path/to/Otherlink")
+                ],
+                &entries
+            )
+        },
         Err(e) => panic!("{}: Expected an Ok but got err", e),
     }
 }

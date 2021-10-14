@@ -16,12 +16,8 @@ impl<T> HopProgram<T>
 where
     T: UserDirs + StdIO + SymLinks + Directories,
 {
-    pub fn list_links(&self) -> HopEffect<()> {
-        let entries = self.get_link_pairs()?;
-        entries
-            .iter()
-            .for_each(|lp| self.value.println(&format!("{}", lp.link)));
-        Ok(())
+    pub fn list_links(&self) -> HopEffect<Vec<LinkPair>> {
+        self.get_link_pairs()
     }
 
     pub fn tabulate_links(&self) -> HopEffect<Vec<LinkPair>> {
