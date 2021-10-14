@@ -1,3 +1,5 @@
+use crate::algebra::hop::DeleteStatus;
+
 use super::*;
 
 use std::io;
@@ -36,26 +38,26 @@ pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
 
 pub fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
     let action = hop_program.mark_dir(link_pair);
-    handle_action(action, &format!("Could not mark directory: {}", link_pair))
+    match action {
+        Ok(_) => println!("Created link from {} {} {}", link_pair.link, Yellow.paint("->"), link_pair.target),
+        Err(e) => handle_error(e, &format!("Could not mark directory: {}", link_pair)),
+    }
 }
 
 pub fn handle_delete(hop_program: &hop::HopProgram<Prod>, link: &Link) {
     let action = hop_program.delete_link(link);
-    handle_action(action, &format!("Could not delete link: {}", link))
+    match  action {
+        Ok(DeleteStatus::DeleteAborted)   => println!("Aborting delete of {}", link),
+        Ok(DeleteStatus::DeleteSucceeded(pair)) => {
+            println!("Removed link {} {} {}", link, Yellow.paint("->"), pair.target)
+        },
+        Err(e) => handle_error(e,  &format!("Could not delete link: {}", link)),
+    }
+
 }
 
 pub fn io_error(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, message)
-}
-
-fn handle_action<T>(effect: HopEffect<T>, message: &str) {
-    match effect {
-        Ok(_) => (),
-        Err(e) => {
-            println!("{}",Yellow.paint(format!("{}", message)));
-            eprintln!("{}",Red.paint(format!("Error: {}", e)))
-        }
-    }
 }
 
 fn handle_error(error: io::Error, message: &str) {

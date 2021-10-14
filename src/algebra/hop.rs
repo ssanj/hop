@@ -12,6 +12,13 @@ pub struct HopProgram<T> {
     pub cfg_dir: String,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum DeleteStatus {
+    DeleteAborted,
+    DeleteSucceeded(LinkPair)
+}
+
+
 impl<T> HopProgram<T>
 where
     T: UserDirs + StdIO + SymLinks + Directories,
@@ -65,7 +72,7 @@ where
         }
     }
 
-    pub fn delete_link(&self, link: &Link) -> HopEffect<()> {
+    pub fn delete_link(&self, link: &Link) -> HopEffect<DeleteStatus> {
         let link_pairs = self.get_link_pairs()?;
 
         match link_pairs.iter().find(|lp| &lp.link == link) {
@@ -76,19 +83,14 @@ where
                 );
 
                 let no_action = || {
-                    self.value
-                        .println(&format!("Aborting delete of {}", &pair.link));
-                    Ok(())
+                    Ok(DeleteStatus::DeleteAborted)
                 };
 
                 let yes_action = || {
                     let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
                     self.value.delete_link(hop_home, pair)?;
-                    self.value.println(&format!(
-                        "Removed link {} which pointed to {}",
-                        link, &pair.target
-                    ));
-                    Ok(())
+
+                    Ok(DeleteStatus::DeleteSucceeded(pair.clone()))
                 };
 
                 self.prompt_user(&prompt_message, yes_action, no_action)

@@ -1,6 +1,6 @@
 use algebra::hop;
 use clap::{App, Arg};
-use models::{HopEffect, Link, LinkPair};
+use models::{Link, LinkPair};
 use prod::prod_models::Prod;
 
 mod algebra;

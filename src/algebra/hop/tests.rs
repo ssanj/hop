@@ -1,4 +1,5 @@
 use super::HopProgram;
+use crate::algebra::hop::DeleteStatus;
 use crate::algebra::symlinks::{SymLink, SymLinks};
 use crate::algebra::{directories::Directories, std_io::StdIO, user_dirs::UserDirs};
 use crate::models::{HopEffect, Link, LinkPair};
@@ -441,14 +442,14 @@ fn delete_link_success() {
         cfg_dir: ".hop".to_string(),
     };
     match program.delete_link(&Link::new("myLink")) {
-        Ok(_) => {
+        Ok(result) => {
             let expected = vec![
                 "Are you sure you want to delete myLink which links to /my/path/to/link ?"
-                    .to_string(),
-                "Removed link myLink which pointed to /my/path/to/link".to_string(),
+                    .to_string()
             ];
 
             assert_eq!(&expected, &output.into_inner());
+            assert_eq!(result, DeleteStatus::DeleteSucceeded(LinkPair::new("myLink", "/my/path/to/link")));
             assert_eq!(&Vec::<String>::new(), &input.into_inner());
         }
         Err(e) => panic!("Expected an Ok but got Err: {}", e),
@@ -472,14 +473,14 @@ fn delete_link_aborted() {
         cfg_dir: ".hop".to_string(),
     };
     match program.delete_link(&Link::new("myLink")) {
-        Ok(_) => {
+        Ok(result) => {
             let expected = vec![
                 "Are you sure you want to delete myLink which links to /my/path/to/link ?"
-                    .to_string(),
-                "Aborting delete of myLink".to_string(),
+                    .to_string()
             ];
 
             assert_eq!(&expected, &output.into_inner());
+            assert_eq!(result, DeleteStatus::DeleteAborted);
             assert_eq!(&Vec::<String>::new(), &input.into_inner());
         }
         Err(e) => panic!("Expected an Ok but got Err: {}", e),
