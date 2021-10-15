@@ -1,6 +1,6 @@
 use super::prod_models::Prod;
 use crate::models::{HopEffect, Link, LinkPair, LinkTarget};
-use crate::program::io_error;
+use crate::program::{io_error, io_error_ex};
 
 use crate::algebra::symlinks::{SymLink, SymLinks};
 use std::fs::{self, DirEntry};
@@ -31,13 +31,16 @@ impl SymLinks for Prod {
 
 //TODO: Refactor this
 fn get_links(path: &Path) -> HopEffect<Vec<LinkPair>> {
-    let dir_it = fs::read_dir(path)?;
-    let symlinks = dir_it
-        .filter(|res| res.as_ref().map_or_else(|_| false, |d| is_symlink(d)))
-        .map(|res| res.and_then(|entry| create_link_pair(&entry)))
-        .collect::<Result<Vec<_>, io::Error>>()?; //sequence
-
-    Ok(symlinks)
+    match fs::read_dir(path) {
+        Ok(dir_it) => {
+            let symlinks = dir_it
+                .filter(|res| res.as_ref().map_or_else(|_| false, |d| is_symlink(d)))
+                .map(|res| res.and_then(|entry| create_link_pair(&entry)))
+                .collect::<Result<Vec<_>, io::Error>>()?; //sequence
+            Ok(symlinks)
+        },
+        Err(e) => Err(io_error_ex(&format!("Could not read directory: {}", path.to_string_lossy()), e)),
+    }
 }
 
 fn is_symlink(dir_entry: &DirEntry) -> bool {

@@ -67,6 +67,10 @@ pub fn io_error(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, message)
 }
 
+pub fn io_error_ex(message: &str, e: io::Error) -> io::Error {
+    io_error(&format!("{}\n{}", message, e.to_string()))
+}
+
 fn handle_error(error: io::Error, message: &str) {
     println!("{}", Yellow.paint(message));
     eprintln!("{}", Red.paint(format!("Error: {}", error)))
