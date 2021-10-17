@@ -71,6 +71,12 @@ pub fn io_error_ex(message: &str, e: io::Error) -> io::Error {
     io_error(&format!("{}\n{}", message, e.to_string()))
 }
 
+/// Creates an error with both the `current_error` and the `original_error` that
+/// cause the current error.
+pub fn io_error_ex_nested(message: &str, current_error: io::Error, original_error: io::Error) -> io::Error {
+    io_error(&format!("{}\n{}\n{}", message, current_error.to_string(), original_error.to_string()))
+}
+
 fn handle_error(error: io::Error, message: &str) {
     println!("{}", Yellow.paint(message));
     eprintln!("{}", Red.paint(format!("Error: {}", error)))
