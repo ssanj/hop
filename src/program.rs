@@ -8,7 +8,14 @@ use std::io;
 pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
     let action = hop_program.list_links();
     match action {
-        Ok(entries) => entries.iter().for_each(|lp| println!("{}", lp.link)),
+        Ok(entries) => {
+            if entries.is_empty() {
+                println!("No entries to list.\nPlease create some entries with {}\nPlease use {} for more information", Yellow.paint("hop -m <link> <path>"), Yellow.paint("hop -h"))
+            } else {
+                entries.iter().for_each(|lp| println!("{}", lp.link))
+            }
+
+        },
         Err(e) => handle_error(e, "Could not retrieve list of links"),
     }
 }
