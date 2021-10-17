@@ -7,25 +7,34 @@ use std::io;
 
 pub fn handle_list(hop_program: &hop::HopProgram<Prod>) {
     let action = hop_program.list_links();
+
+    fn handler(lp:&LinkPair) {
+        println!("{}", lp.link)
+    }
+
+    handle_links(action, handler)
+}
+
+pub fn handle_table(hop_program: &hop::HopProgram<Prod>) {
+    let action = hop_program.tabulate_links();
+
+    fn handler(lp:&LinkPair) {
+        println!("{} {} {}", lp.link, Yellow.paint("->"), lp.target)
+    }
+
+    handle_links(action, handler)
+}
+
+fn handle_links(action: io::Result<Vec<LinkPair>>, handler: fn(&LinkPair)) {
     match action {
         Ok(entries) => {
             if entries.is_empty() {
                 println!("No entries to list.\nPlease create some entries with {}\nPlease use {} for more information", Yellow.paint("hop -m <link> <path>"), Yellow.paint("hop -h"))
             } else {
-                entries.iter().for_each(|lp| println!("{}", lp.link))
+                entries.iter().for_each(handler)
             }
 
         },
-        Err(e) => handle_error(e, "Could not retrieve list of links"),
-    }
-}
-
-pub fn handle_table(hop_program: &hop::HopProgram<Prod>) {
-    let action = hop_program.tabulate_links();
-    match action {
-        Ok(entries) => entries
-            .iter()
-            .for_each(|lp| println!("{} {} {}", lp.link, Yellow.paint("->"), lp.target)),
         Err(e) => handle_error(e, "Could not retrieve list of links"),
     }
 }
