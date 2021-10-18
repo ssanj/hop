@@ -9,8 +9,11 @@ mod prod;
 mod program;
 
 fn main() {
+
+    const APPVERSION: &'static str = env!("CARGO_PKG_VERSION");
+
     let app = App::new("Hop")
-        .version("0.1.0")
+        .version(APPVERSION)
         .author("Sanj Sahayam")
         .about("Hop to frequently used directories")
         .arg(
