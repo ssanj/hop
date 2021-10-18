@@ -17,6 +17,14 @@ fn main() {
         .author("Sanj Sahayam")
         .about("Hop to frequently used directories")
         .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("c")
+                .value_name("HOP_HOME")
+                .help("Absolute path to the hop home directory. Defaults to ~/.hop if not specified")
+                .takes_value(true),
+        )
+        .arg(
             Arg::with_name("list")
                 .short("l")
                 .long("list")
@@ -56,9 +64,13 @@ fn main() {
     let mut app2 = app.clone(); //we need this close to display usage on error
     let matches = app.get_matches();
 
+    let hop_home = matches.value_of("config").unwrap_or(".hop");
+
+    println!("hop_home: {}", &hop_home);
+
     let hop_program = hop::HopProgram {
         value: Prod,
-        cfg_dir: ".hop".to_string(),
+        cfg_dir: hop_home.to_string(),
     };
 
     if matches.is_present("list") {
