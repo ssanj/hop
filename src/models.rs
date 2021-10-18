@@ -28,6 +28,12 @@ pub struct LinkPair {
     pub target: LinkTarget,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum HomeType {
+    Relative(String),
+    Absolute(String),
+}
+
 impl LinkPair {
     pub fn new(link: &str, target: &str) -> Self {
         LinkPair {
@@ -40,6 +46,17 @@ impl LinkPair {
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl fmt::Display for HomeType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let path_type = match self {
+            HomeType::Absolute(path) => format!("Absolute({})", path),
+            HomeType::Relative(path) => format!("Relative({})", path),
+        };
+
+        write!(f, "{}", path_type)
     }
 }
 

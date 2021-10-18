@@ -1,6 +1,6 @@
 use algebra::hop;
 use clap::{App, Arg};
-use models::{Link, LinkPair};
+use models::{Link, LinkPair, HomeType};
 use prod::prod_models::Prod;
 
 mod algebra;
@@ -64,13 +64,14 @@ fn main() {
     let mut app2 = app.clone(); //we need this close to display usage on error
     let matches = app.get_matches();
 
-    let hop_home = matches.value_of("config").unwrap_or(".hop");
+    let hop_home = matches.value_of("config").map(|hd| HomeType::Absolute(hd.to_string())).unwrap_or(HomeType::Relative(".hop".to_string()));
 
     println!("hop_home: {}", &hop_home);
 
     let hop_program = hop::HopProgram {
         value: Prod,
-        cfg_dir: hop_home.to_string(),
+        cfg_dir: ".hop".to_string(),
+        hop_home_dir: hop_home,
     };
 
     if matches.is_present("list") {

@@ -1,4 +1,4 @@
-use crate::models::{HopEffect, Link, LinkPair};
+use crate::models::{HopEffect, Link, LinkPair, HomeType};
 use crate::program::io_error;
 
 use super::{
@@ -10,6 +10,7 @@ use super::{
 pub struct HopProgram<T> {
     pub value: T,
     pub cfg_dir: String,
+    pub hop_home_dir: HomeType,
 }
 
 #[derive(Debug, PartialEq)]

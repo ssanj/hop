@@ -2,7 +2,7 @@ use super::HopProgram;
 use crate::algebra::hop::DeleteStatus;
 use crate::algebra::symlinks::{SymLink, SymLinks};
 use crate::algebra::{directories::Directories, std_io::StdIO, user_dirs::UserDirs};
-use crate::models::{HopEffect, Link, LinkPair};
+use crate::models::{HomeType, HopEffect, Link, LinkPair};
 
 use std::cell::Cell;
 use std::io;
@@ -152,6 +152,7 @@ fn list_links_success() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.list_links() {
         Ok(entries) => {
@@ -172,6 +173,8 @@ fn list_links_success() {
 fn list_links_home_dir_failure() {
     let output = Cell::new(vec![]);
     let cfg_dir = ".blah".to_string();
+    let hop_home_dir = HomeType::Relative(".hop".to_string());
+
     let value = {
         let default = TestStub::new(&output);
         let stub = TestStub {
@@ -182,7 +185,7 @@ fn list_links_home_dir_failure() {
         Test { stub }
     };
 
-    let program = HopProgram { value, cfg_dir };
+    let program = HopProgram { value, cfg_dir, hop_home_dir };
 
     match program.list_links() {
         Err(e) => assert_eq!(e.to_string(), "Failed to get home dir"),
@@ -194,6 +197,7 @@ fn list_links_home_dir_failure() {
 fn list_links_read_links_failure() {
     let output = Cell::new(vec![]);
     let cfg_dir = ".blah".to_string();
+    let hop_home_dir = HomeType::Relative(".hop".to_string());
 
     let value = {
         let default = TestStub::new(&output);
@@ -205,7 +209,7 @@ fn list_links_read_links_failure() {
         Test { stub }
     };
 
-    let program = HopProgram { value, cfg_dir };
+    let program = HopProgram { value, cfg_dir, hop_home_dir };
 
     match program.list_links() {
         Err(e) => assert_eq!(e.to_string(), "Failed to read links"),
@@ -217,10 +221,11 @@ fn list_links_read_links_failure() {
 fn list_links_read_links_no_result() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
     let cfg_dir = ".blah".to_string();
+    let hop_home_dir = HomeType::Relative(".hop".to_string());
     let stub = TestStub::new(&output);
     let value = Test { stub };
 
-    let program = HopProgram { value, cfg_dir };
+    let program = HopProgram { value, cfg_dir, hop_home_dir };
 
     match program.list_links() {
         Ok(_) => {
@@ -250,6 +255,7 @@ fn tabulate_links_success() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.tabulate_links() {
         Ok(entries) => {
@@ -280,6 +286,7 @@ fn jump_target_success() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.jump_target(Link::new("myOtherLink")) {
         Ok(link) => {
@@ -304,6 +311,7 @@ fn jump_target_not_found() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.jump_target(Link::new("bizarre")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
@@ -321,6 +329,7 @@ fn jump_target_without_links() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.jump_target(Link::new("myLink")) {
         Ok(_) => panic!("Expected Err but got Ok"),
@@ -338,6 +347,7 @@ fn mark_dir_success() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
         Ok(_) => assert_eq!(&Vec::<String>::new(), &output.into_inner()),
@@ -362,6 +372,7 @@ fn mark_dir_dir_does_not_exist() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
     Ok(_) => panic!("Expected an Err but got Ok"),
@@ -386,6 +397,7 @@ fn mark_dir_link_exists() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
@@ -414,6 +426,7 @@ fn mark_dir_write_link_failed() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
@@ -439,6 +452,7 @@ fn delete_link_success() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.delete_link(&Link::new("myLink")) {
         Ok(result) => {
@@ -473,6 +487,7 @@ fn delete_link_aborted() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.delete_link(&Link::new("myLink")) {
         Ok(result) => {
@@ -504,6 +519,7 @@ fn delete_link_link_not_found() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.delete_link(&Link::new("notALink")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
@@ -540,6 +556,7 @@ fn delete_link_failed() {
     let program = HopProgram {
         value: test_val,
         cfg_dir: ".hop".to_string(),
+        hop_home_dir: HomeType::Relative(".hop".to_string()),
     };
     match program.delete_link(&Link::new("myLink")) {
         Ok(_) => panic!("Expected Err but got Ok"),
