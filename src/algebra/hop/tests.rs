@@ -73,6 +73,15 @@ impl<'a> TestStub<'a> {
             ..default
         }
     }
+
+
+    fn program(stub: Self) -> HopProgram<Test<'a>> {
+        HopProgram {
+            value: Test{ stub },
+            cfg_dir: ".xyz".to_string(),
+            hop_home_dir: HomeType::Relative(".xyz".to_string()),
+        }
+    }
 }
 
 impl StdIO for Test<'_> {
@@ -146,14 +155,8 @@ fn list_links_success() {
 
     let output = Cell::new(vec![]);
     let stub = TestStub::with_read_links(&output, read_links);
+    let program = TestStub::program(stub);
 
-    let test_val = Test { stub };
-
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.list_links() {
         Ok(entries) => {
             assert_eq!(&Vec::<String>::new(), &output.into_inner());
@@ -172,20 +175,12 @@ fn list_links_success() {
 #[test]
 fn list_links_home_dir_failure() {
     let output = Cell::new(vec![]);
-    let cfg_dir = ".blah".to_string();
-    let hop_home_dir = HomeType::Relative(".hop".to_string());
-
-    let value = {
-        let default = TestStub::new(&output);
-        let stub = TestStub {
-            get_hop_home: GetHopHomeStatus::Failed("Failed to get home dir".to_string()),
-            ..default
-        };
-
-        Test { stub }
+    let default = TestStub::new(&output);
+    let stub = TestStub {
+        get_hop_home: GetHopHomeStatus::Failed("Failed to get home dir".to_string()),
+        ..default
     };
-
-    let program = HopProgram { value, cfg_dir, hop_home_dir };
+    let program = TestStub::program(stub);
 
     match program.list_links() {
         Err(e) => assert_eq!(e.to_string(), "Failed to get home dir"),
@@ -196,20 +191,13 @@ fn list_links_home_dir_failure() {
 #[test]
 fn list_links_read_links_failure() {
     let output = Cell::new(vec![]);
-    let cfg_dir = ".blah".to_string();
-    let hop_home_dir = HomeType::Relative(".hop".to_string());
 
-    let value = {
-        let default = TestStub::new(&output);
-        let stub = TestStub {
-            read_dir_links: Err("Failed to read links".to_string()),
-            ..default
-        };
-
-        Test { stub }
+    let default = TestStub::new(&output);
+    let stub = TestStub {
+        read_dir_links: Err("Failed to read links".to_string()),
+        ..default
     };
-
-    let program = HopProgram { value, cfg_dir, hop_home_dir };
+    let program = TestStub::program(stub);
 
     match program.list_links() {
         Err(e) => assert_eq!(e.to_string(), "Failed to read links"),
@@ -220,12 +208,8 @@ fn list_links_read_links_failure() {
 #[test]
 fn list_links_read_links_no_result() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
-    let cfg_dir = ".blah".to_string();
-    let hop_home_dir = HomeType::Relative(".hop".to_string());
     let stub = TestStub::new(&output);
-    let value = Test { stub };
-
-    let program = HopProgram { value, cfg_dir, hop_home_dir };
+    let program = TestStub::program(stub);
 
     match program.list_links() {
         Ok(_) => {
@@ -249,14 +233,8 @@ fn tabulate_links_success() {
 
     let output = Cell::new(vec![]);
     let stub = TestStub::with_read_links(&output, read_links);
+    let program = TestStub::program(stub);
 
-    let test_val = Test { stub };
-
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.tabulate_links() {
         Ok(entries) => {
             assert_eq!(
@@ -281,13 +259,8 @@ fn jump_target_success() {
     ];
 
     let stub = TestStub::with_read_links(&output, read_links);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.jump_target(Link::new("myOtherLink")) {
         Ok(link) => {
             assert_eq!(link, "/my/path/to/Otherlink".to_string());
@@ -306,13 +279,8 @@ fn jump_target_not_found() {
     ];
 
     let stub = TestStub::with_read_links(&output, read_links);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.jump_target(Link::new("bizarre")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
         Err(e) => assert_eq!(e.to_string(), "Could not find link: bizarre".to_string()),
@@ -324,13 +292,8 @@ fn jump_target_without_links() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     let stub = TestStub::new(&output);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.jump_target(Link::new("myLink")) {
         Ok(_) => panic!("Expected Err but got Ok"),
         Err(e) => assert_eq!(e.to_string(), "Could not find link: myLink".to_string()),
@@ -342,13 +305,8 @@ fn mark_dir_success() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     let stub = TestStub::new(&output);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
         Ok(_) => assert_eq!(&Vec::<String>::new(), &output.into_inner()),
         Err(e) => panic!("{}: Expected an Ok but got err", e),
@@ -359,21 +317,13 @@ fn mark_dir_success() {
 fn mark_dir_dir_does_not_exist() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
-    let test_val = {
-        let default = TestStub::new(&output);
-        let stub = TestStub {
-            dir_exists: false,
-            ..default
-        };
-
-        Test { stub }
+    let default = TestStub::new(&output);
+    let stub = TestStub {
+        dir_exists: false,
+        ..default
     };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
     Ok(_) => panic!("Expected an Err but got Ok"),
     Err(e) => assert_eq!("A directory named `/my/path/to/link` does not exist or you do not have permission to it.", e.to_string()),
@@ -384,21 +334,13 @@ fn mark_dir_dir_does_not_exist() {
 fn mark_dir_link_exists() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
-    let test_val = {
-        let default = TestStub::new(&output);
-        let stub = TestStub {
-            link_exists: true,
-            ..default
-        };
-
-        Test { stub }
+    let default = TestStub::new(&output);
+    let stub = TestStub {
+        link_exists: true,
+        ..default
     };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
         Err(e) => assert_eq!(
@@ -413,21 +355,13 @@ fn mark_dir_write_link_failed() {
     let output: Cell<Vec<String>> = Cell::new(vec![]);
 
     //Is there a more succinct, yet readable way to do this?
-    let test_val = {
-        let default = TestStub::new(&output);
-        let stub = TestStub {
-            write_link: Some("Could not create link because this is a test".to_string()),
-            ..default
-        };
-
-        Test { stub }
+    let default = TestStub::new(&output);
+    let stub = TestStub {
+        write_link: Some("Could not create link because this is a test".to_string()),
+        ..default
     };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.mark_dir(&LinkPair::new("myLink", "/my/path/to/link")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
         Err(e) => assert_eq!(
@@ -447,13 +381,8 @@ fn delete_link_success() {
     ];
 
     let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.delete_link(&Link::new("myLink")) {
         Ok(result) => {
             let expected = vec![
@@ -482,13 +411,8 @@ fn delete_link_aborted() {
     ];
 
     let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.delete_link(&Link::new("myLink")) {
         Ok(result) => {
             let expected = vec![
@@ -514,13 +438,8 @@ fn delete_link_link_not_found() {
     ];
 
     let stub = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-    let test_val = Test { stub };
+    let program = TestStub::program(stub);
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
     match program.delete_link(&Link::new("notALink")) {
         Ok(_) => panic!("Expected an Err but got Ok"),
         Err(e) => {
@@ -543,21 +462,13 @@ fn delete_link_failed() {
         LinkPair::new("myOtherLink", "/my/path/to/Otherlink"),
     ];
 
-    let test_val = {
-        let default = TestStub::with_read_links_and_std_in(&output, read_links, &input);
-        let stub = TestStub {
-            delete_link: SymLinkDeleteStatus::Failed,
-            ..default
-        };
-
-        Test { stub }
+    let default = TestStub::with_read_links_and_std_in(&output, read_links, &input);
+    let stub = TestStub {
+        delete_link: SymLinkDeleteStatus::Failed,
+        ..default
     };
 
-    let program = HopProgram {
-        value: test_val,
-        cfg_dir: ".hop".to_string(),
-        hop_home_dir: HomeType::Relative(".hop".to_string()),
-    };
+    let program = TestStub::program(stub);
     match program.delete_link(&Link::new("myLink")) {
         Ok(_) => panic!("Expected Err but got Ok"),
         Err(e) => {

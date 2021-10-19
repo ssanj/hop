@@ -23,6 +23,7 @@ impl<T> HopProgram<T>
 where
     T: UserDirs + StdIO + SymLinks + Directories,
 {
+
     pub fn list_links(&self) -> HopEffect<Vec<LinkPair>> {
         self.get_link_pairs()
     }
