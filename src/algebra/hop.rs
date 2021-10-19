@@ -40,14 +40,14 @@ where
     }
 
     fn get_link_pairs(&self) -> HopEffect<Vec<LinkPair>> {
-        let hop_home_dir = self.value.get_hop_home(&self.cfg_dir)?;
+        let hop_home_dir = self.value.get_hop_home(&self.hop_home_dir)?;
         let entries = self.value.read_dir_links(&hop_home_dir)?;
 
         Ok(entries.to_vec())
     }
 
     pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<()> {
-        let hop_home = self.value.get_hop_home(&self.cfg_dir)?;
+        let hop_home = self.value.get_hop_home(&self.hop_home_dir)?;
         let symlink_path = (hop_home).join(&pair.link);
 
         let target_path = pair.target.to_path_buf();
@@ -85,7 +85,7 @@ where
                 let no_action = || Ok(DeleteStatus::DeleteAborted);
 
                 let yes_action = || {
-                    let hop_home = &self.value.get_hop_home(&self.cfg_dir)?;
+                    let hop_home = &self.value.get_hop_home(&self.hop_home_dir)?;
                     self.value.delete_link(hop_home, pair)?;
 
                     Ok(DeleteStatus::DeleteSucceeded(pair.clone()))

@@ -91,7 +91,7 @@ impl StdIO for Test<'_> {
 }
 
 impl UserDirs for Test<'_> {
-    fn get_hop_home(&self, _path: &str) -> HopEffect<PathBuf> {
+    fn get_hop_home(&self, _path: &HomeType) -> HopEffect<PathBuf> {
         match &self.stub.get_hop_home {
             GetHopHomeStatus::Succeeded(path) => Ok(PathBuf::from(path)),
             GetHopHomeStatus::Failed(error) => {

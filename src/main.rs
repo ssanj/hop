@@ -64,7 +64,11 @@ fn main() {
     let mut app2 = app.clone(); //we need this close to display usage on error
     let matches = app.get_matches();
 
-    let hop_home = matches.value_of("config").map(|hd| HomeType::Absolute(hd.to_string())).unwrap_or(HomeType::Relative(".hop".to_string()));
+    let hop_home =
+        matches
+        .value_of("config")
+        .map(|hd| HomeType::Absolute(hd.to_string()))
+        .unwrap_or(HomeType::Relative(".hop".to_string()));
 
     println!("hop_home: {}", &hop_home);
 
