@@ -78,7 +78,6 @@ impl<'a> TestStub<'a> {
     fn program(stub: Self) -> HopProgram<Test<'a>> {
         HopProgram {
             value: Test{ stub },
-            cfg_dir: ".xyz".to_string(),
             hop_home_dir: HomeType::Relative(".xyz".to_string()),
         }
     }

@@ -10,7 +10,7 @@ mod program;
 
 fn main() {
 
-    const APPVERSION: &'static str = env!("CARGO_PKG_VERSION");
+    const APPVERSION: &str = env!("CARGO_PKG_VERSION");
 
     let app = App::new("Hop")
         .version(APPVERSION)
@@ -68,13 +68,12 @@ fn main() {
         matches
         .value_of("config")
         .map(|hd| HomeType::Absolute(hd.to_string()))
-        .unwrap_or(HomeType::Relative(".hop".to_string()));
+        .unwrap_or_else(|| HomeType::Relative(".hop".to_string()));
 
     println!("hop_home: {}", &hop_home);
 
     let hop_program = hop::HopProgram {
         value: Prod,
-        cfg_dir: ".hop".to_string(),
         hop_home_dir: hop_home,
     };
 

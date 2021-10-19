@@ -9,7 +9,6 @@ use super::{
 /// The data required to run hop
 pub struct HopProgram<T> {
     pub value: T,
-    pub cfg_dir: String,
     pub hop_home_dir: HomeType,
 }
 
