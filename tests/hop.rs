@@ -50,9 +50,7 @@ fn create_links() -> Result<(), Box<dyn std::error::Error>> {
     let hop_home = hop_home_temp.as_path();
     let target_dir = target_dir_temp.as_path();
 
-    fs::create_dir_all(hop_home)?;
     fs::create_dir_all(target_dir)?;
-    fs::metadata(hop_home).expect(&format!("Could not find hop_home: {}", hop_home.to_string_lossy()));
 
     let mut cmd = Command::cargo_bin("hop")?;
     cmd
