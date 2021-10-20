@@ -70,8 +70,6 @@ fn main() {
         .map(|hd| HomeType::Absolute(hd.to_string()))
         .unwrap_or_else(|| HomeType::Relative(".hop".to_string()));
 
-    println!("hop_home: {}", &hop_home);
-
     let hop_program = hop::HopProgram {
         value: Prod,
         hop_home_dir: hop_home,
