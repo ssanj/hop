@@ -295,7 +295,7 @@ fn delete_link() -> Result<(), Box<dyn std::error::Error>> {
         .success();
 
 
-    fs::metadata(tag2).expect_err("Find target tag2. Expected it to be deleted");
+    fs::metadata(tag2).expect_err("Found target tag2. Expected it to be deleted");
 
     working_dir.close()?;
 
