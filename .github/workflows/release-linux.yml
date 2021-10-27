@@ -36,5 +36,5 @@ jobs:
     - uses: fnkr/github-action-ghr@v1.3
       if: startsWith(github.ref, 'refs/tags/')
       env:
-        GHR_PATH: "${{ steps.release-build.outputs.artifact-name }}-${{ matrix.target }}"
+        GHR_PATH: "${{ steps.release-build.outputs.artifact-name }}"
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
