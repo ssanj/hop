@@ -42,8 +42,8 @@ jobs:
       env:
         ARTIFACT_NAME: "${{ steps.release-build.outputs.release-artifact-name }}-${{ matrix.os }}"
 
-    # - uses: softprops/action-gh-release@v1
-    #   if: startsWith(github.ref, 'refs/tags/')
-    #   with:
-    #     token: ${{ secrets.GITHUB_TOKEN }}
-    #     files: "${{ steps.copy-artifact.outputs.artifact-name }}"
+    - uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: "${{ steps.copy-artifact.outputs.artifact-name }}"
