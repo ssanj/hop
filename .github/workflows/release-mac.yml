@@ -32,9 +32,18 @@ jobs:
         rustc -Vv
         cargo -V
         cargo build --release
-        echo "::set-output name=artifact-name::target/release/hop"
-    - uses: fnkr/github-action-ghr@v1.3
-      if: startsWith(github.ref, 'refs/tags/')
-      env:
-        GHR_PATH: "${{ steps.release-build.outputs.artifact-name }}-${{ matrix.target }}"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        echo "::set-output name=release-artifact-name::target/release/hop"
+
+     - name: copy-artifact
+       id: copy-artifact
+       run: |
+        cp "${{ steps.release-build.outputs.release-artifact-name }}" "$ARTIFACT_NAME"
+        echo "::set-output name=artifact-name::$ARTIFACT_NAME"
+       env:
+          ARTIFACT_NAME: "${{ steps.release-build.outputs.release-artifact-name }}-${{ matrix.os }}"
+
+    # - uses: softprops/action-gh-release@v1
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     files: "${{ steps.copy-artifact.outputs.artifact-name }}"
