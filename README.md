@@ -5,6 +5,18 @@ Hop to your frequently used directories.
 
 ## Installation
 
+## Downloading a Release
+
+1. Download the latest [release](https://github.com/ssanj/hop/releases) for your operating system (linux or macos).
+2. Make it executable with:
+
+```
+chmod +x <HOP_EXEC>
+```
+
+3. Copy executable to a directory on your path.
+
+
 ### Building from Source
 
 Run:
