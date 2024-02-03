@@ -6,6 +6,7 @@ use tempfile::tempdir;
 use std::os::unix::fs as nixfs;
 use ansi_term::Color::Yellow;
 
+
 #[test]
 fn file_doesnt_exist() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("hop")?;
@@ -70,6 +71,81 @@ fn create_links() -> Result<(), Box<dyn std::error::Error>> {
 
     let entries = fs::read_dir(hop_home)?.map(|res| res.map(|d| d.file_name())).collect::<Result<Vec<_>, io::Error>>()?;
     assert_eq!(entries, vec!["blee"]);
+
+    working_dir.close()?;
+
+    Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct LinkPair {
+  filename: String,
+  link: String
+}
+
+
+impl LinkPair {
+  fn new(filename: String, link: String) -> Self {
+    LinkPair {
+      filename,
+      link
+    }
+  }
+}
+
+
+#[test]
+fn create_links_with_realpath() -> Result<(), Box<dyn std::error::Error>> {
+
+    let working_dir = tempdir()?;
+    let hop_home_temp = working_dir.path().join("mine").join("hophome");
+    let hop_home = hop_home_temp.as_path();
+
+    let target_dir = std::path::Path::new(".");
+    let mut cmd = Command::cargo_bin("hop")?;
+    cmd
+    .arg("-c")
+    .arg(hop_home.as_os_str())
+    .arg("-m")
+    .arg("blah")
+    .arg(target_dir.as_os_str())
+    .assert()
+    .success();
+
+    fs::metadata(target_dir).expect(&format!("Could not find target dir: {}", target_dir.to_string_lossy()));
+
+    let entries =
+      fs::read_dir(hop_home)?
+        .filter_map(|res| {
+          let link_result: Result<Option<LinkPair>, io::Error> = res.and_then(|de| {
+            de.file_type()
+              .and_then(|filetype| {
+              if filetype.is_symlink() {
+                  let filename = de.file_name().to_string_lossy().to_string();
+                  fs::read_link(hop_home.join(&filename)).map(|link| {
+                    let link_pair = LinkPair::new(filename, link.to_string_lossy().to_string());
+                    Some(link_pair)
+                  })
+                } else {
+                  Ok(None)
+                }
+            })
+          });
+
+          match link_result {
+            Ok(Some(link_pair)) => Some(link_pair),
+            Ok(None)  => None,
+            Err(_) => None,
+          }
+        })
+        .collect::<Vec<LinkPair>>();
+
+    let cwd = std::env::current_dir()?;
+
+    let expected_link_pair =
+      LinkPair::new("blah".to_string(), cwd.to_string_lossy().to_string());
+
+    assert_eq!(entries, vec![expected_link_pair]);
 
     working_dir.close()?;
 

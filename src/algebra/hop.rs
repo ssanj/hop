@@ -52,8 +52,23 @@ where
 
         let target_path = pair.target.to_path_buf();
 
+        let resolved_target_path =
+          // Check if the path is relative and add the current directory to it
+          if target_path.is_relative() {
+            let current_dir = std::env::current_dir()?;
+            if pair.target.as_ref() == std::path::Path::new(".") {
+              // If the user entered ".", then just use the current directory
+              current_dir
+            } else {
+              // Otherwise append the current directory to the relative path
+              current_dir.join(&target_path)
+            }
+          } else {
+            target_path
+          };
+
         //TODO: Send in a LinkTarget
-        if self.value.dir_exists(&target_path)? {
+        if self.value.dir_exists(&resolved_target_path)? {
             //TODO: Send in a SymLink
             if self.value.link_exists(&symlink_path)? {
                 Err(io_error(&format!(
@@ -62,7 +77,7 @@ where
                 )))
             } else {
                 self.value
-                    .write_link(&SymLink(symlink_path), &pair.target.to_path_buf())
+                    .write_link(&SymLink(symlink_path), &resolved_target_path)
             }
         } else {
             Err(io_error(&format!(
