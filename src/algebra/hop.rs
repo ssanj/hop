@@ -46,7 +46,7 @@ where
         Ok(entries.to_vec())
     }
 
-    pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<()> {
+    pub fn mark_dir(&self, pair: &LinkPair) -> HopEffect<String> {
         let hop_home = self.value.get_hop_home(&self.hop_home_dir)?;
         let symlink_path = (hop_home).join(&pair.link);
 
@@ -78,6 +78,7 @@ where
             } else {
                 self.value
                     .write_link(&SymLink(symlink_path), &resolved_target_path)
+                    .map(|_| resolved_target_path.to_string_lossy().to_string())
             }
         } else {
             Err(io_error(&format!(

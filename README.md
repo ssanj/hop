@@ -1,7 +1,8 @@
 # Hop
 
-Hop to your frequently used directories.
+![GitHub Release](https://img.shields.io/github/v/release/ssanj/hop)
 
+Hop to your frequently used directories.
 
 ## Installation
 
@@ -30,11 +31,10 @@ Copy binary file from `target/release/hop` to a directory on your path.
 
 ## Usage
 
-
 Run `hop -h` for options:
 
 ```
-Hop 0.1.2
+Hop 0.1.5
 Sanj Sahayam
 Hop to frequently used directories
 

@@ -53,11 +53,11 @@ pub fn handle_jump(hop_program: &hop::HopProgram<Prod>, jump_target: &str) {
 pub fn handle_mark(hop_program: &hop::HopProgram<Prod>, link_pair: &LinkPair) {
     let action = hop_program.mark_dir(link_pair);
     match action {
-        Ok(_) => println!(
+        Ok(target) => println!(
             "Created link from {} {} {}",
             link_pair.link,
             Yellow.paint("->"),
-            link_pair.target
+            target
         ),
         Err(e) => handle_error(e, &format!("Could not mark directory: {}", link_pair)),
     }
